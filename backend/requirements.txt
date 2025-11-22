@@ -1,0 +1,13 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.0
+# Inference/finetune deps used by backend/main.py and LLM scripts
+transformers==4.43.2
+tokenizers==0.19.1
+peft==0.9.0
+accelerate==0.31.0
+datasets==2.19.1
+pyarrow>=14.0.0
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+pillow==10.4.0
+laneatt==2.4.5

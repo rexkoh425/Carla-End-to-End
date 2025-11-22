@@ -1,0 +1,77 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./:/app:ro
+      - D:/Datasets:/Storage:rw
+      - ./pipeline_runs:/app/pipeline_runs
+    # Request all available GPUs (requires NVIDIA Container Toolkit and CUDA-capable host)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
+    gpus: all
+    environment:
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=7000
+      - STORAGE_ROOT=/Storage
+      - STORAGE_INDEX_PATH=/Storage/storage_index.json
+      - LOCALAI_MODEL=gpt-4o-mini-ally
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow:/mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://0.0.0.0:5000
+
+  web:
+    image: nginx:1.27-alpine
+    depends_on:
+      - backend
+    ports:
+      - "8000:80"
+    volumes:
+      - ./WebUI:/usr/share/nginx/html:ro
+      - ./:/repo:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    environment:
+      - NGINX_PORT=80
+
+  mcp-server:
+    image: ghcr.io/ggerganov/llama.cpp:full
+    container_name: mcp-server
+    command:
+      [
+          "--server",
+          "-m", "/models/llm/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+          "-c", "1024",
+          "--port", "8081",
+          "--host", "0.0.0.0",
+        ]
+    volumes:
+      - ./models:/models:ro
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  whisper-api:
+    build: ./whisper_api
+    container_name: whisper-api
+    environment:
+      - WHISPER_MODEL=/models/audio/whisper/ggml-base.en.bin
+    volumes:
+      - ./models:/models:ro
+    ports:
+      - "8082:8082"
+    restart: unless-stopped

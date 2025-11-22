@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carla Controls</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="brand-dot"></div>Local Model Studio</div>
+    <nav>
+      <a href="index.html">Flow Builder</a>
+      <a href="models.html">Models</a>
+      <a href="training.html">Training / Fine-tune</a>
+      <a href="configs.html">Config Editor</a>
+      <a href="controls.html" class="active">Carla Controls</a>
+      <span class="pill">Local-only UI</span>
+    </nav>
+  </header>
+  <main class="page controls-layout">
+    <section class="controls-columns">
+      <div class="controls-col">
+        <div class="card compact">
+          <h3>Connection & Checks</h3>
+          <div class="grid-2">
+            <div>
+              <label>Host</label>
+              <input id="carla-host" value="host.docker.internal" />
+            </div>
+            <div>
+              <label>Port</label>
+              <input id="carla-port" type="number" value="2000" />
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label>Streaming port</label>
+              <input id="carla-streaming-port" type="number" placeholder="0 or 2001" />
+            </div>
+            <div class="toolbar right">
+              <button id="btn-connect-check" class="secondary tiny">Connectivity</button>
+              <button id="btn-actor-counts" class="tiny">Actors</button>
+            </div>
+          </div>
+          <pre id="connect-output" class="log mini"></pre>
+          <pre id="actors-output" class="log mini"></pre>
+        </div>
+
+        <div class="card compact">
+          <h3>Recording</h3>
+          <p class="subtext">Record hero camera + LiDAR videos with control log (autopilot = ground truth).</p>
+          <div class="grid-3 align-center">
+            <div>
+              <label>Duration (s)</label>
+              <input id="rec-duration" type="number" min="1" value="15" />
+            </div>
+            <div>
+              <label>FPS</label>
+              <input id="rec-fps" type="number" min="1" value="15" />
+            </div>
+            <div>
+              <label>LiDAR range (m)</label>
+              <input id="rec-range" type="number" min="1" value="50" />
+            </div>
+          </div>
+          <div class="toolbar space-between" style="margin-top:10px;">
+            <div class="toolbar">
+              <button id="btn-rec-start">Start recording</button>
+              <button id="btn-rec-stop" class="secondary">Stop recording</button>
+              <button id="btn-robotaxi-start" class="secondary">Start robotaxi rec</button>
+              <button id="btn-robotaxi-stop" class="secondary tiny">Stop robotaxi</button>
+            </div>
+            <div class="muted note">Outputs: camera.mp4, lidar.mp4, controls.json under Output/recordings/</div>
+          </div>
+        </div>
+
+        <div class="card compact">
+          <h3>Spawn</h3>
+          <p class="subtext">Player + traffic + pedestrians.</p>
+          <div class="grid-3 align-center">
+            <div>
+              <label>Spawn mode</label>
+              <select id="spawn-mode" class="compact-select">
+                <option value="scene" selected>Scene (player + traffic)</option>
+                <option value="hero_tm">Hero + TM traffic</option>
+                <option value="hero_only">Hero only</option>
+                <option value="hero_sensors">Hero with sensors</option>
+                <option value="sensor_rig">Sensor rig (cam+lidar)</option>
+              </select>
+            </div>
+            <div>
+              <label>After spawn</label>
+              <select id="follow-action" class="compact-select">
+                <option value="none">Do nothing</option>
+                <option value="follow_hero" selected>Follow hero in FPV</option>
+              </select>
+            </div>
+            <div>
+              <label>Autopilot</label>
+              <select id="autopilot-select" class="compact-select">
+                <option value="on" selected>On</option>
+                <option value="off">Off</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div>
+              <label>Vehicles</label>
+              <input id="ctrl-vehicles" type="number" value="20" min="0" />
+            </div>
+            <div>
+              <label>Walkers</label>
+              <input id="ctrl-walkers" type="number" value="40" min="0" />
+            </div>
+            <div>
+              <label>Town</label>
+              <input id="ctrl-town" placeholder="Town10HD_Opt" />
+            </div>
+          </div>
+          <div class="toolbar space-between" style="margin-top:10px;">
+            <div class="toolbar">
+              <button id="btn-spawn">Spawn scene</button>
+            </div>
+            <div></div>
+          </div>
+        </div>
+
+        <div class="card compact">
+          <h3>Status & Agent</h3>
+          <div class="status-agent-row">
+            <div class="status-box">
+              <h4>Status</h4>
+              <div class="log mini" id="ctrl-log"></div>
+            </div>
+            <div class="agent-box">
+              <h4>Carla Agent (LocalAI)</h4>
+              <p class="subtext">Requires LocalAI at localhost:8080.</p>
+              <textarea id="agent-prompt" rows="2" placeholder="Spawn 5 cars and 8 walkers in Town10HD_Opt"></textarea>
+              <div class="toolbar" style="margin-top:8px;">
+                <button id="btn-agent-send">Send</button>
+              </div>
+              <pre id="agent-reply" class="log mini"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-col">
+        <div class="card compact">
+          <h3>Quick Actions</h3>
+          <div class="action-grid">
+            <button id="btn-carla-start" class="secondary tiny">Start CARLA container</button>
+            <button id="btn-lane" class="tiny">Lane follow</button>
+            <button id="btn-lidar" class="tiny">Capture LiDAR</button>
+            <button id="btn-map" class="tiny">Build 2D map</button>
+            <button id="btn-follow-hero" class="tiny">Follow hero (FPV)</button>
+            <button id="btn-stop-fpv" class="secondary tiny">Stop FPV</button>
+          </div>
+        </div>
+
+        <div class="card compact">
+          <h3>Sensor Options</h3>
+          <div class="grid-2">
+            <div>
+              <label>LiDAR range (m)</label>
+              <input id="lidar-range" type="number" value="50" min="1" step="1" />
+            </div>
+            <div>
+              <label>LiDAR mode</label>
+              <select id="lidar-mode">
+                <option value="sensor.lidar.ray_cast" selected>Standard</option>
+                <option value="sensor.lidar.ray_cast_semantic">Semantic</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card compact wide-previews">
+          <h3>Previews</h3>
+          <p class="subtext">Latest outputs via <code>/api/file?path=...</code>.</p>
+          <div class="preview-row">
+            <div class="preview-block">
+              <label>LiDAR map path</label>
+              <div class="toolbar">
+                <input id="preview-lidar-path" value="Storage/Output/lidar/lidar_topdown.png" />
+                <button id="btn-preview-lidar" class="secondary tiny">Refresh</button>
+              </div>
+              <div class="node-output-preview large">
+                <img id="preview-lidar-img" alt="LiDAR map preview" />
+              </div>
+            </div>
+            <div class="preview-block">
+              <label>Debug mask path</label>
+              <div class="toolbar">
+                <input id="preview-debug-path" value="Storage/Output/latest_debug.png" />
+                <button id="btn-preview-debug" class="secondary tiny">Refresh</button>
+              </div>
+              <div class="node-output-preview large">
+                <img id="preview-debug-img" alt="Debug mask preview" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="controls.js"></script>
+</body>
+</html>

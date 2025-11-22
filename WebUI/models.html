@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Models - Local Model Orchestrator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="brand-dot"></div>Local Model Studio</div>
+    <nav>
+      <a href="index.html">Flow Builder</a>
+      <a href="models.html" class="active">Models</a>
+      <a href="training.html">Training / Fine-tune</a>
+      <a href="configs.html">Config Editor</a>
+      <a href="controls.html">Carla Controls</a>
+      <a href="#annotation">Data Annotation</a>
+      <span class="pill">Local-only UI</span>
+    </nav>
+  </header>
+
+  <main class="page single">
+    <section class="stack">
+      <div class="card luxe">
+        <h2>Choose Models</h2>
+        <p class="subtext">Pick a target model to edit its config and drop it into the pipeline. All logic runs locally.</p>
+        <div class="toolbar fancy-toolbar">
+          <select id="model-select" class="pill-input"></select>
+          <input id="model-search" class="pill-input" placeholder="Search models..." />
+          <div class="pill" id="model-count"></div>
+          <button class="secondary soft" id="refresh-inventory">Refresh inventory</button>
+        </div>
+        <div class="status-bar luxe-status">
+          <div class="status-pill" id="status-model">Model: -</div>
+          <div class="status-pill warn" id="status-validation">Validation: pending</div>
+          <div class="status-pill" id="status-tracking">Tracking: none</div>
+        </div>
+        <div id="model-grid" class="models luxe-grid"></div>
+      </div>
+
+      <div class="card luxe">
+        <h3>Configuration Designer</h3>
+        <p class="subtext">Edit JSON for the selected model, then save or export. Values persist in localStorage.</p>
+        <div class="grid-2">
+          <div>
+            <label for="config-name">Config Name</label>
+            <input id="config-name" placeholder="my_laneatt_exp" />
+          </div>
+          <div>
+            <label for="runtime-device">Device</label>
+            <select id="runtime-device">
+              <option value="auto">auto</option>
+              <option value="cuda:0">cuda:0</option>
+              <option value="cpu">cpu</option>
+            </select>
+          </div>
+        </div>
+        <label for="config-editor" style="margin-top:12px;">Raw JSON</label>
+        <textarea id="config-editor"></textarea>
+        <div class="toolbar">
+          <button id="beautify-btn">Format JSON</button>
+          <button class="secondary" id="reset-btn">Reset</button>
+          <button class="secondary" id="save-btn">Save locally</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

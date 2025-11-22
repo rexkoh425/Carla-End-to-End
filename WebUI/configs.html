@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="brand-dot"></div>Local Model Studio</div>
+    <nav>
+      <a href="index.html">Flow Builder</a>
+      <a href="training.html">Training / Fine-tune</a>
+      <a href="configs.html" class="active">Config Editor</a>
+      <a href="controls.html">Carla Controls</a>
+      <span class="pill">Local-only UI</span>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="stack">
+      <div class="card">
+        <h2>YAML Configs</h2>
+        <p class="subtext">Select a YAML file and edit every option inline. Sections collapse based on indentation.</p>
+        <div class="toolbar">
+          <select id="config-source"></select>
+          <input id="config-path" placeholder="path/to/config.yaml" />
+          <button id="load-btn">Load</button>
+          <button class="secondary" id="fold-all">Collapse all</button>
+          <button class="secondary" id="expand-all">Expand all</button>
+        </div>
+        <div class="status-bar">
+          <div class="status-pill" id="status-line">Waiting to load config...</div>
+        </div>
+      </div>
+
+      <div class="card tree-card">
+        <h3>Config Tree</h3>
+        <p class="subtext">Click a section to retract/expand. Primitive values are editable inline or via the Quick Answer bar.</p>
+        <div class="tree-shell" id="tree-shell">
+          <div class="tree" id="tree-root"></div>
+          <div class="tree-drag-hint">Drag to pan</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stack">
+      <div class="card split">
+        <div>
+          <h3>Quick Answer Bar</h3>
+          <p class="subtext">Select any field above to edit its value here.</p>
+          <label>Selected path</label>
+          <div class="pill" id="selected-path" style="margin-bottom:8px;">-</div>
+          <label for="quick-input">Value</label>
+          <input id="quick-input" placeholder="Enter value..." />
+          <div class="toolbar" style="margin-top:10px;">
+            <button id="quick-apply">Apply change</button>
+            <span id="quick-hint" class="subtext"></span>
+          </div>
+        </div>
+        <div>
+          <h3>YAML Preview</h3>
+          <textarea id="yaml-preview" readonly></textarea>
+          <div class="toolbar" style="margin-top:10px;">
+            <button id="download-btn">Download YAML</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>How to save</h3>
+        <ul style="color:var(--muted); margin-top:6px; padding-left:18px;">
+          <li>Edits are kept in your browser until you reload.</li>
+          <li>Use “Download YAML” to save the updated file locally.</li>
+          <li>Serve this UI from a local server so <code>fetch</code> can read your YAML files.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+</body>
+</html>

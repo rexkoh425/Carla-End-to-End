@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training Station - Local Model Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header>
+    <div class="brand"><div class="brand-dot"></div>Local Model Studio</div>
+    <nav>
+      <a href="index.html">Flow Builder</a>
+      <a href="training.html" class="active">Training / Fine-tune</a>
+      <a href="configs.html">Config Editor</a>
+      <a href="controls.html">Carla Controls</a>
+      <span class="pill">Local-only UI</span>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="stack">
+      
+      <div class="card">
+        <h2>Training Setup</h2>
+        <p class="subtext">Define the core parameters for your training run.</p>
+        
+        <div class="grid-2">
+          <div>
+            <label for="experiment-name">Experiment Name</label>
+            <input id="experiment-name" type="text" placeholder="e.g., lane_detection_v1" />
+          </div>
+          <div>
+            <label for="train-model">Base Model</label>
+            <select id="train-model">
+              <option value="resnet18">ResNet18</option>
+              <option value="resnet34">ResNet34</option>
+              <option value="yolov5s">YOLOv5s</option>
+              <option value="custom">Custom Path...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 10px;">
+          <div>
+            <label for="train-dataset">Dataset Path</label>
+            <input id="train-dataset" type="text" placeholder="Storage/LaneDataSet" />
+          </div>
+          <div>
+            <label for="device">Device</label>
+            <select id="device">
+              <option value="cuda:0">cuda:0</option>
+              <option value="cpu">cpu</option>
+              <option value="mps">mps (mac)</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Hyperparameters</h4>
+        <div class="grid-2">
+          <div>
+            <label for="epochs">Epochs</label>
+            <input id="epochs" type="number" value="10" />
+          </div>
+          <div>
+            <label for="batch-size">Batch Size</label>
+            <input id="batch-size" type="number" value="32" />
+          </div>
+          <div>
+            <label for="lr">Learning Rate</label>
+            <input id="lr" type="number" step="0.0001" value="0.001" />
+          </div>
+          <div>
+            <label for="freeze">Freeze Layers (e.g., 0-5)</label>
+            <input id="freeze" type="text" placeholder="None" />
+          </div>
+        </div>
+        
+        <div style="margin-top: 10px;">
+           <label for="checkpoint">Resume from Checkpoint (.pt)</label>
+           <input id="checkpoint" type="text" placeholder="Optional path to checkpoint..." />
+        </div>
+
+        <div style="margin-top: 10px;">
+            <label for="augment-notes">Augmentation Notes</label>
+            <textarea id="augment-notes" rows="2" placeholder="Describe augmentations (Flip, Rotate, ColorJitter)..."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Model Configuration</h3>
+        <p class="subtext">Load a raw YAML/JSON config to override defaults.</p>
+        
+        <div class="grid-2">
+            <div>
+                <label for="config-path">Load from URL/Path</label>
+                <div class="toolbar" style="margin-top: 4px;">
+                    <input id="config-path" placeholder="configs/lane_att.yaml" />
+                    <button id="load-config-path" class="secondary">Fetch</button>
+                </div>
+            </div>
+            <div>
+                <label for="config-file">Upload Local File</label>
+                <input id="config-file" type="file" style="margin-top: 4px;" />
+            </div>
+        </div>
+
+        <label for="config-preview" style="margin-top: 10px;">Config Preview</label>
+        <textarea id="config-preview" rows="6" readonly style="font-family: monospace; color: #aaa;"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+            <button id="dryrun-btn" class="secondary">Dry Run (Simulate)</button>
+            <button id="train-btn" style="background-color: #27ae60; color: white;">Start Training</button>
+        </div>
+        <div class="toolbar" style="margin-top: 10px;">
+            <button id="save-train-btn" class="secondary">Save Plan</button>
+            <button id="export-train-json" class="secondary">Export JSON</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="stack">
+      
+      <div class="card">
+        <h3>Experiment Tracking</h3>
+        <div class="grid-2">
+            <div>
+                <label for="train-tracker-provider">Provider</label>
+                <select id="train-tracker-provider">
+                    <option value="none">None</option>
+                    <option value="mlflow">MLflow</option>
+                    <option value="clearml">ClearML</option>
+                </select>
+            </div>
+            <div>
+                <label for="train-tracker-endpoint">Endpoint</label>
+                <input id="train-tracker-endpoint" value="http://localhost:5000" />
+            </div>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+            <div>
+                <label for="train-tracker-experiment">Exp Name (Remote)</label>
+                <input id="train-tracker-experiment" placeholder="default" />
+            </div>
+            <div>
+                <label for="train-tracker-run">Run ID (Remote)</label>
+                <input id="train-tracker-run" placeholder="auto" />
+            </div>
+        </div>
+        <div class="toolbar" style="margin-top: 10px;">
+            <button id="train-save-tracker" class="secondary">Save Config</button>
+            <button id="train-ping-tracker" class="secondary">Ping Server</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Saved Plans</h3>
+        <div id="run-list" class="run-list-container">
+            <p class="subtext">Loading plans...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Training Console</h3>
+        <div class="log" id="train-log" style="height: 200px;">
+            </div>
+      </div>
+
+      <div class="card">
+        <h3>Training Results</h3>
+        <p class="subtext">Upload a metrics JSON to visualize loss/accuracy, or load a pipeline run file.</p>
+        <div class="toolbar">
+          <input type="file" id="results-file" accept=".json" />
+        </div>
+        <div class="results-summary" id="results-summary"></div>
+        <canvas id="results-chart" width="640" height="260" style="margin-top:12px; background: rgba(255,255,255,0.02); border-radius: 10px; border:1px solid rgba(255,255,255,0.05);"></canvas>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="training.js"></script>
+  <script>
+    // Simple dev-mode live reload with opt-out and slower polling (silent).
+    (function enableLiveReload() {
+      const protocol = window.location.protocol;
+      if (protocol !== "http:" && protocol !== "https:") return;
+      if (!/localhost|127\.0\.0\.1/.test(window.location.host)) return;
+      if (localStorage.getItem("liveReload") === "off") return;
+
+      const assets = new Set([window.location.href]);
+      ["link[rel=\"stylesheet\"]", "script[src]"].forEach((selector) => {
+        document.querySelectorAll(selector).forEach((el) => {
+          const ref = el.getAttribute(selector.startsWith("link") ? "href" : "src");
+          if (!ref) return;
+          const resolved = new URL(ref, window.location.href);
+          if (resolved.origin === window.location.origin) assets.add(resolved.href);
+        });
+      });
+
+      const knownTags = new Map();
+      const checkForChange = async (url) => {
+        try {
+          const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+          if (!res.ok) return;
+          const tag = res.headers.get("etag") || res.headers.get("last-modified") || res.headers.get("content-length");
+          if (!tag) return;
+          if (!knownTags.has(url)) {
+            knownTags.set(url, tag);
+            return;
+          }
+          if (knownTags.get(url) !== tag) window.location.reload();
+        } catch (err) {}
+      };
+
+      setInterval(() => assets.forEach((url) => checkForChange(url)), 5000);
+    })();
+  </script>
+</body>
+</html>

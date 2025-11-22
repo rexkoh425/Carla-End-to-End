@@ -1,0 +1,39 @@
+name: general-labeller
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - pillow
+  - pyyaml
+  - scipy
+  - matplotlib
+  - scikit-learn
+  - tqdm
+  - pycocotools
+  - pip
+  - pip:
+      - transformers>=4.36
+      - opencv-python>=4.10
+      - ultralytics>=8.2
+      - huggingface-hub>=0.24
+      - supervision>=0.22
+      - dds-cloudapi-sdk>=0.3.2
+      - diffusers>=0.29
+      - accelerate>=0.30
+      - safetensors>=0.4
+      - xformers>=0.0.27
+      - bitsandbytes>=0.43
+      - requests>=2.32
+      - yt-dlp>=2024.8.6
+      - beautifulsoup4>=4.12
+      - lxml>=4.9
+      - cython>=3.0
+      - tensorboardX>=2.6
+      - seaborn>=0.13
+      - prefetch_generator>=1.0.3
+      - imageio>=2.34
+      - yacs>=0.1.8
+      - imageio-ffmpeg>=0.5.1

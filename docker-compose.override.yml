@@ -1,0 +1,30 @@
+services:
+  backend:
+    # Install the CARLA 0.9.16 client wheel (Python 3.10) on start, then launch the API.
+    command: >
+      sh -c "
+        micromamba run -n app pip install /carla_wheels/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl &&
+        micromamba run -n app uvicorn backend.main:app --host 0.0.0.0 --port 7000 --log-level info
+      "
+    shm_size: "32g"
+    volumes:
+      # Read-only view of the repo so Storage assets are visible
+      - ./:/app:ro
+      # Writable mounts for outputs and run artifacts
+      - ./Output:/app/Output
+      - ./backend:/app/backend
+      - ./pipeline_runs:/app/pipeline_runs
+      # Windows host recording path (bind C:\... into the container)
+      - C:/NUS/MachineLearning/GeneralML/recordings:/recordings:rw
+      # CARLA wheel mount (extracted from CARLA_0.9.16.tar.gz)
+      - ./CarlaLinux/extracted/PythonAPI/carla/dist:/carla_wheels:ro
+
+  mlflow:
+    volumes:
+      - ./mlflow:/mlflow
+
+  web:
+    volumes:
+      - ./WebUI:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./:/repo:ro

@@ -1,0 +1,9 @@
+config.json
+pipeline_runs/
+CarlaControl/
+CarlaWin/
+CarlaLinux/
+recordings/
+Output/
+timeline.txt
+To-do.txt

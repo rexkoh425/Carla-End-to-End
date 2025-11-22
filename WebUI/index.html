@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Model Orchestrator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="brand-dot"></div>Local Model Studio</div>
+    <nav>
+      <a href="index.html" class="active">Flow Builder</a>
+      <a href="models.html">Models</a>
+      <a href="training.html">Training / Fine-tune</a>
+      <a href="configs.html">Config Editor</a>
+      <a href="controls.html">Carla Controls</a>
+      <a href="#annotation">Data Annotation</a>
+      <span class="pill">Local-only UI</span>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="stack">
+      <div class="card">
+        <h3>Tracking (MLflow / ClearML)</h3>
+        <p class="subtext">Set your local tracking server so runs can register experiments. Values persist locally.</p>
+        <div class="grid-2">
+          <div>
+            <label for="tracker-provider">Provider</label>
+            <select id="tracker-provider">
+              <option value="none">None</option>
+              <option value="mlflow">MLflow</option>
+              <option value="clearml">ClearML</option>
+            </select>
+          </div>
+          <div>
+            <label for="tracker-endpoint">Tracking endpoint</label>
+            <input id="tracker-endpoint" placeholder="http://localhost:5000" />
+          </div>
+          <div>
+            <label for="tracker-experiment">Experiment</label>
+            <input id="tracker-experiment" placeholder="default" />
+          </div>
+          <div>
+            <label for="tracker-run">Run name</label>
+            <input id="tracker-run" placeholder="lane_preview" />
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:10px;">
+          <button id="save-tracker">Save tracking</button>
+          <button class="secondary" id="ping-tracker">Ping</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <button id="add-input">Add Data Input</button>
+          <button id="add-model">Add Model</button>
+          <button id="add-debug">Add Debug</button>
+          <button id="add-post">Add Output</button>
+          <button id="run-pipeline">Run pipeline</button>
+          <button class="secondary" id="load-pipeline-btn">Load pipeline</button>
+          <button class="secondary" id="clear-graph">Reset graph</button>
+          <input type="file" id="load-pipeline-input" accept=".json" style="display:none;" />
+        </div>
+        <div class="palette" id="block-palette">
+          <div class="palette-item" draggable="true" data-type="Input" title="Drag to canvas">Data Input</div>
+          <div class="palette-item" draggable="true" data-type="Model" title="Drag to canvas">Model</div>
+          <div class="palette-item" draggable="true" data-type="Debug" title="Drag to canvas">Debug</div>
+          <div class="palette-item" draggable="true" data-type="Post" title="Drag to canvas">Output</div>
+        </div>
+        <p class="subtext">Drag blocks from the palette onto the canvas or use the buttons. Drag nodes to reposition. Click a connector then another node to link them; links are drawn in real time.</p>
+        <div class="graph-wrapper" id="graph-wrapper">
+          <svg class="link-layer" id="link-layer"></svg>
+          <div class="graph-canvas" id="graph-canvas"></div>
+        </div>
+      </div>
+
+      <div class="card split">
+        <div>
+          <h3>Test Run</h3>
+          <label for="input-path">Input path</label>
+          <input id="input-path" placeholder="Storage/sample_video.mp4" />
+          <label for="output-path" style="margin-top:10px;">Output path</label>
+          <input id="output-path" placeholder="Storage/output_preview.mp4" />
+          <label for="preview-notes" style="margin-top:10px;">Notes</label>
+          <textarea id="preview-notes" placeholder="Describe how to route frames or data through the nodes..."></textarea>
+          <div class="toolbar" style="margin-top:10px;">
+            <button id="run-btn">Simulate</button>
+            <button class="secondary" id="export-btn">Export JSON</button>
+          </div>
+        </div>
+        <div>
+          <h3>Console</h3>
+          <div class="log" id="log-box"></div>
+        </div>
+      </div>
+
+      <div class="card" id="annotation">
+        <h3>Data Annotation</h3>
+        <p class="subtext">Send new footage to CVAT for labeling. Use the link below after CVAT containers are up.</p>
+        <div class="toolbar">
+          <button id="start-cvat">Open CVAT (localhost:8080)</button>
+          <button class="secondary" onclick="appendLog('CVAT: remember to docker compose up before opening');">Log reminder</button>
+        </div>
+        <p class="subtext">Tip: Export completed tasks as COCO or YOLO, then drop them into <code>Storage/LaneDataSet</code> or import straight into the Flow Builder via the Input node.</p>
+      </div>
+
+      <div class="card">
+        <h3>Preview</h3>
+        <p class="subtext">The backend serves files via <code>/api/file?path=...</code>. Keep inputs/outputs inside the repo so they resolve.</p>
+        <div class="preview-grid">
+          <div class="preview-box">
+            <div class="preview-label">Input</div>
+            <img id="preview-input" alt="Input preview" />
+          </div>
+          <div class="preview-box">
+            <div class="preview-label">Output</div>
+            <img id="preview-output" alt="Output preview" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Simple dev-mode live reload with opt-out and slower polling (silent).
+    (function enableLiveReload() {
+      const protocol = window.location.protocol;
+      if (protocol !== "http:" && protocol !== "https:") return;
+      if (!/localhost|127\\.0\\.0\\.1/.test(window.location.host)) return;
+      if (localStorage.getItem("liveReload") === "off") return;
+
+      const assets = new Set([window.location.href]);
+      ["link[rel=\"stylesheet\"]", "script[src]"].forEach((selector) => {
+        document.querySelectorAll(selector).forEach((el) => {
+          const ref = el.getAttribute(selector.startsWith("link") ? "href" : "src");
+          if (!ref) return;
+          const resolved = new URL(ref, window.location.href);
+          if (resolved.origin === window.location.origin) assets.add(resolved.href);
+        });
+      });
+
+      const knownTags = new Map();
+      const checkForChange = async (url) => {
+        try {
+          const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+          if (!res.ok) return;
+          const tag = res.headers.get("etag") || res.headers.get("last-modified") || res.headers.get("content-length");
+          if (!tag) return;
+          if (!knownTags.has(url)) {
+            knownTags.set(url, tag);
+            return;
+          }
+          if (knownTags.get(url) !== tag) window.location.reload();
+        } catch (err) {}
+      };
+
+      setInterval(() => assets.forEach((url) => checkForChange(url)), 5000);
+    })();
+  </script>
+</body>
+</html>
