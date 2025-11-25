@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+whispercpp
+python-multipart
