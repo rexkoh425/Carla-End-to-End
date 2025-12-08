@@ -1,0 +1,4 @@
+# Default settings for projecting LiDAR to a 2D top-down map.
+res: 0.05          # meters per pixel
+x_range: [-20.0, 20.0]  # forward/backward in meters
+y_range: [-20.0, 20.0]  # left/right in meters

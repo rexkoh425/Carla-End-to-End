@@ -1,0 +1,11 @@
+# Current recording/replay preferences
+fps: 50                 # high FPS; heavier on encoding/IO
+image_w: 1280
+image_h: 720
+lidar_range: 50
+enable_depth: false     # depth video is disabled in script
+enable_radar: false     # radar disabled
+tm_global_speedup: -50  # % (negative = faster than speed limit)
+tm_vehicle_speedup: -40 # % per-vehicle speedup
+tm_desired_speed_kmh: 50
+notes: "Use only if you need high-FPS captures and can tolerate occasional stalls."

@@ -909,9 +909,25 @@ function bindNodeControls(div, node) {
       if (model) {
         node.title = model.name;
       }
+      // Clear cached previews so downstream Debug/Post nodes don't show stale outputs after a model swap.
+      clearCachedPreviews();
       renderGraph();
     });
   });
+}
+
+function clearCachedPreviews() {
+  state.graph.nodes.forEach((n) => {
+    if (n.type === "Debug") {
+      n.meta.debugPreviewPath = "";
+      n.meta.debugPreviewLocal = "";
+    }
+    if (n.type === "Post") {
+      n.meta.outputPreviewPath = "";
+      n.meta.outputPreviewLocal = "";
+    }
+  });
+  persistGraph();
 }
 
 function loadPipelineFromFile(file) {

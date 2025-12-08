@@ -1,0 +1,17 @@
+# Default LiDAR capture settings
+outfile: Output/lidar/lidar.npy
+sensor: sensor.lidar.ray_cast  # or sensor.lidar.ray_cast_semantic
+range: 50.0
+pps: 150000
+rot_freq: 10.0
+channels: 32
+upper_fov: 10.0
+lower_fov: -30.0
+lidar_x: 0.0
+lidar_y: 0.0
+lidar_z: 2.5
+lidar_pitch: 0.0
+lidar_yaw: 0.0
+lidar_roll: 0.0
+planar: false
+autopilot: true

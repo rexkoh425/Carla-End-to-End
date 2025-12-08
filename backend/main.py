@@ -393,8 +393,17 @@ def _load_mask2former(model_id: str, device: str) -> Tuple[AutoImageProcessor, M
     return processor, model, resolved_device
 
 
-def execute_mask2former_laneatt(req: PipelineRun, run_id: str) -> Dict:
-    """Execute a simple Input -> Mask2Former -> LaneATT -> Output image pipeline."""
+def execute_mask2former_laneatt(
+    req: PipelineRun,
+    run_id: str,
+    base_image: Optional[np.ndarray] = None,
+    input_override: Optional[Path] = None,
+) -> Dict:
+    """Execute a simple Input -> Mask2Former -> LaneATT -> Output image pipeline.
+
+    base_image: if provided, overlays are applied on top of this image (used to accumulate upstream masks).
+    input_override: if provided, use this image path for inference instead of scanning candidates.
+    """
     cfg = req.config or {}
     model_cfg = (cfg.get("model") or {})
     runtime_cfg = (cfg.get("runtime") or {})
@@ -402,24 +411,29 @@ def execute_mask2former_laneatt(req: PipelineRun, run_id: str) -> Dict:
     downstream = ((cfg.get("downstream") or {}).get("laneatt") or {})
 
     # Flexible input/output resolution so the same pipeline works with new paths.
-    input_candidates = []
-    if req.inputs:
-        input_candidates.extend(req.inputs)
-    if data_cfg.get("source"):
-        input_candidates.append(data_cfg["source"])
-    if req.graph:
-        for node in req.graph.get("nodes", []):
-            if node.get("type") in ("Input", "Data"):
-                src = node.get("meta", {}).get("source")
-                if src:
-                    input_candidates.append(src)
+    if input_override:
+        input_path = _resolve_path(str(input_override))
+        if not input_path.is_file():
+            raise FileNotFoundError(f"Input not found: {input_path}")
+    else:
+        input_candidates = []
+        if req.inputs:
+            input_candidates.extend(req.inputs)
+        if data_cfg.get("source"):
+            input_candidates.append(data_cfg["source"])
+        if req.graph:
+            for node in req.graph.get("nodes", []):
+                if node.get("type") in ("Input", "Data"):
+                    src = node.get("meta", {}).get("source")
+                    if src:
+                        input_candidates.append(src)
 
-    input_path_raw = next((p for p in input_candidates if p), None)
-    if not input_path_raw:
-        raise RuntimeError("No input path provided in pipeline.")
-    input_path = _resolve_path(input_path_raw)
-    if not input_path.is_file():
-        raise FileNotFoundError(f"Input not found: {input_path}")
+        input_path_raw = next((p for p in input_candidates if p), None)
+        if not input_path_raw:
+            raise RuntimeError("No input path provided in pipeline.")
+        input_path = _resolve_path(input_path_raw)
+        if not input_path.is_file():
+            raise FileNotFoundError(f"Input not found: {input_path}")
 
     output_candidates = []
     if req.outputs:
@@ -466,6 +480,7 @@ def execute_mask2former_laneatt(req: PipelineRun, run_id: str) -> Dict:
     frame_bgr = cv2.imread(str(input_path))
     if frame_bgr is None:
         raise RuntimeError(f"Failed to read image: {input_path}")
+    overlay_base = base_image.copy() if base_image is not None else frame_bgr.copy()
     original_h, original_w = frame_bgr.shape[:2]
     resized_frame, scale = _maybe_resize(frame_bgr, max_long_edge)
     rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
@@ -486,7 +501,7 @@ def execute_mask2former_laneatt(req: PipelineRun, run_id: str) -> Dict:
     if scale != 1.0:
         mask_full_res = _resize_mask(mask_full_res, (frame_bgr.shape[0], frame_bgr.shape[1]))
     mask_full_res = _dilate_mask(mask_full_res, dilate_kernel)
-    overlay_frame = _apply_overlay(frame_bgr, mask_full_res, overlay_color, overlay_alpha)
+    overlay_frame = _apply_overlay(overlay_base, mask_full_res, overlay_color, overlay_alpha)
 
     # Optional LaneATT refinement/drawing.
     laneatt_rendered = None
@@ -771,16 +786,27 @@ def _copy_file(src: Path, dst: Path) -> Path:
   return dst
 
 
-def _run_mask2former_stage(input_path: Path, output_path: Path, config: dict, graph: Optional[dict], run_id: str) -> Path:
+def _run_mask2former_stage(
+  input_path: Path,
+  output_path: Path,
+  config: dict,
+  graph: Optional[dict],
+  run_id: str,
+  raw_input_path: Optional[Path] = None,
+) -> Path:
   cfg = config or {}
+  detect_path = raw_input_path if raw_input_path and raw_input_path.is_file() else input_path
+  overlay_base = cv2.imread(str(input_path))
+  if overlay_base is None and raw_input_path and raw_input_path.is_file():
+    overlay_base = cv2.imread(str(raw_input_path))
   pr = PipelineRun(
     model="mask2former",
     config=cfg,
     graph=graph,
-    inputs=[str(input_path)],
+    inputs=[str(detect_path)],
     outputs=[str(output_path)],
   )
-  result = execute_mask2former_laneatt(pr, run_id)
+  result = execute_mask2former_laneatt(pr, run_id, base_image=overlay_base, input_override=detect_path)
   out = Path(result.get("output", output_path))
   pipeline_logger.info("Mask2Former stage: input=%s output=%s", input_path, out)
   return out
@@ -933,6 +959,8 @@ def _render_yolopv2_overlay(
 def _run_yolopv2_stage(input_path: Path, output_path: Path, meta: dict, raw_input_path: Optional[Path] = None) -> Path:
   """
   Single-image YOLOPv2 inference (torchscript weights).
+  Accumulates overlays by default: the current upstream image is used both for
+  detection and for rendering, so downstream stages keep previous masks/lines.
   """
   try:
     from YOLOPv2.utils import utils as yutils
@@ -945,7 +973,8 @@ def _run_yolopv2_stage(input_path: Path, output_path: Path, meta: dict, raw_inpu
   iou_threshold = float(meta.get("iou_threshold", 0.45))
   img_size = int(meta.get("img_size", 640))
   lane_dilate = int(meta.get("lane_dilate", 3))
-  area_alpha = float(meta.get("area_alpha", 0.45))
+  # Default to lane lines only; disable drivable-area wash unless explicitly requested.
+  area_alpha = float(meta.get("area_alpha", 0.0))
   lane_alpha = float(meta.get("lane_alpha", 0.55))
 
   default_weights_path = _resolve_path("YOLOPv2/data/weights/yolopv2.pt")
@@ -963,13 +992,16 @@ def _run_yolopv2_stage(input_path: Path, output_path: Path, meta: dict, raw_inpu
   if not weights_path.is_file():
     raise FileNotFoundError(f"YOLOPv2 weights not found: {weights_path}")
 
-  detect_path = raw_input_path if raw_input_path and raw_input_path.is_file() else input_path
-  frame_bgr = cv2.imread(str(detect_path))
-  if frame_bgr is None:
-    raise RuntimeError(f"Failed to read image: {detect_path}")
+  # Use the upstream image for both detection and rendering so overlays accumulate.
+  render_bgr = cv2.imread(str(input_path))
+  if render_bgr is None and raw_input_path and raw_input_path.is_file():
+    render_bgr = cv2.imread(str(raw_input_path))
+  if render_bgr is None:
+    raise RuntimeError(f"Failed to read image: {input_path}")
+  detect_bgr = render_bgr
 
   # YOLOPv2 expects a 1280x720 road-view; keep alignment with the original demo.
-  resized_frame = cv2.resize(frame_bgr, (1280, 720), interpolation=cv2.INTER_LINEAR)
+  resized_frame = cv2.resize(detect_bgr, (1280, 720), interpolation=cv2.INTER_LINEAR)
   img, _, _ = yutils.letterbox(resized_frame, new_shape=img_size, stride=32)
   img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR -> RGB CHW
   img = np.ascontiguousarray(img)
@@ -1024,15 +1056,15 @@ def _run_yolopv2_stage(input_path: Path, output_path: Path, meta: dict, raw_inpu
     ll_mask = yutils.lane_line_mask(ll)
 
   overlay = _render_yolopv2_overlay(
-    resized_frame,
+    render_bgr,
     da_mask,
     ll_mask,
     area_alpha=area_alpha,
     lane_alpha=lane_alpha,
     lane_dilate=lane_dilate,
   )
-  if overlay.shape[:2] != frame_bgr.shape[:2]:
-    overlay = cv2.resize(overlay, (frame_bgr.shape[1], frame_bgr.shape[0]), interpolation=cv2.INTER_LINEAR)
+  if overlay.shape[:2] != render_bgr.shape[:2]:
+    overlay = cv2.resize(overlay, (render_bgr.shape[1], render_bgr.shape[0]), interpolation=cv2.INTER_LINEAR)
 
   output_path.parent.mkdir(parents=True, exist_ok=True)
   cv2.imwrite(str(output_path), overlay)
@@ -1102,7 +1134,7 @@ def execute_graph_pipeline(req: PipelineRun, run_id: str) -> Dict:
       try:
         if model_id.startswith("mask2former"):
           out_path = _derive_output_path(upstream_path, output_root)
-          produced = _run_mask2former_stage(upstream_path, out_path, req.config or {}, req.graph, run_id)
+          produced = _run_mask2former_stage(upstream_path, out_path, req.config or {}, req.graph, run_id, upstream_source)
           id_to_outputs[nid] = produced
           id_to_sources[nid] = upstream_source or upstream_path
           steps.append({"node": nid, "type": "mask2former", "input": str(upstream_path), "output": str(produced)})

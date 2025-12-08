@@ -4,3 +4,6 @@
 [submodule "CVAT"]
 	path = CVAT
 	url = https://github.com/opencv/cvat.git
+[submodule "tools/llama.cpp"]
+	path = tools/llama.cpp
+	url = https://github.com/ggerganov/llama.cpp.git

@@ -373,7 +373,7 @@ textarea:focus {
 
 .graph-wrapper {
   position: relative;
-  min-height: 480px;
+  min-height: 640px;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -384,7 +384,7 @@ textarea:focus {
 .graph-canvas {
   position: relative;
   width: 100%;
-  min-height: 480px;
+  min-height: 640px;
   z-index: 3;
   transition: background 0.15s ease, border 0.15s ease;
 }
@@ -405,6 +405,24 @@ textarea:focus {
   cursor: grab;
   touch-action: none;
   z-index: 5;
+}
+
+.node-input,
+.node-data,
+.node-debug,
+.node-post {
+  width: 360px;
+  min-height: 420px;
+}
+
+.node-input .node-inline-preview,
+.node-data .node-inline-preview {
+  padding: 8px;
+}
+
+.node-input .node-inline-preview img,
+.node-data .node-inline-preview img {
+  max-height: 200px;
 }
 
 .node-connector {
@@ -704,12 +722,25 @@ textarea:focus {
   border: 1px solid #1f2937;
   background: #0b1222;
   padding: 16px;
-  min-height: 520px;
+  min-height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 6px;
+}
+
+.node-post {
+  width: 360px;
+}
+
+.node-post .node-output-preview {
+  padding: 12px;
+  min-height: 320px;
+}
+
+.node-post .node-output-preview img {
+  max-height: 420px;
 }
 
 .node-output-preview.large {
@@ -718,7 +749,7 @@ textarea:focus {
 
 .node-output-preview img {
   width: 100%;
-  max-height: 1100px;
+  max-height: 420px;
   object-fit: contain;
   border-radius: 12px;
   border: 1px dashed #1f2937;

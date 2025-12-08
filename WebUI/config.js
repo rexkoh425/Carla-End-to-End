@@ -2,15 +2,10 @@
 
 // Prefer repo files served under /repo inside the nginx container (dockerized),
 // but keep local dev fallback so browsing from the repo still works.
-const repoBases = ["/repo", "..", "."]; // tried in order
+const repoBases = ["/repo", ".", ".."]; // tried in order
 
-let configSources = [
-  { id: "mask2former", name: "Mask2Former finetune", path: "../Mask2Former/mask2former_finetune_config.yaml" },
-  { id: "yolop", name: "YOLOP", path: "../YOLOP/configs/yolop.yaml" },
-  { id: "laneatt", name: "LaneATT", path: "../LaneATT/laneatt_model_config.yaml" },
-  { id: "yoloe", name: "YOLOE", path: "../YOLOE/yoloe_bbox_pipeline_config.yaml" },
-  { id: "custom", name: "Custom path", path: "../path/to/config.yaml" },
-];
+// Start empty; populate from yaml_index.json and always append a Custom option.
+let configSources = [];
 
 function pathCandidates(raw) {
   if (!raw) return [];
@@ -26,11 +21,9 @@ function normalizePath(p) {
   return pathCandidates(p)[0] || "";
 }
 
-configSources = configSources.map((c) => ({ ...c, path: normalizePath(c.path) }));
-
 const cfgState = {
-  selected: configSources[0].id,
-  path: configSources[0].path,
+  selected: null,
+  path: "",
   data: {},
   rawText: "",
   folded: new Set(),
@@ -93,14 +86,18 @@ function setStatus(msg, bad = false) {
 function renderSourcePicker() {
   const sel = $("config-source");
   sel.innerHTML = "";
-  configSources.forEach((src) => {
+  configSources.forEach((src, idx) => {
     const opt = document.createElement("option");
     opt.value = src.id;
-    opt.textContent = `${src.name} — ${src.path}`;
-    if (cfgState.selected === src.id) opt.selected = true;
+    opt.textContent = `${src.name} - ${src.path}`;
+    if ((cfgState.selected && cfgState.selected === src.id) || (!cfgState.selected && idx === 0)) opt.selected = true;
     sel.appendChild(opt);
   });
-  $("config-path").value = cfgState.path;
+  if (!cfgState.path && configSources.length) {
+    cfgState.path = configSources[0].path;
+    cfgState.selected = configSources[0].id;
+  }
+  $("config-path").value = cfgState.path || "";
 }
 
 function toggleFold(pathStr) {
@@ -430,23 +427,23 @@ function initConfigPage() {
   fetch("yaml_index.json")
     .then((res) => (res.ok ? res.json() : []))
     .then((items) => {
-      if (Array.isArray(items) && items.length) {
-        // merge, dedupe by path
-        const existingPaths = new Set(configSources.map((s) => s.path));
-        items.forEach((i, idx) => {
-          const normalizedPath = normalizePath(i.path);
-          if (!existingPaths.has(normalizedPath)) {
-            configSources.push({
+      const normalized =
+        Array.isArray(items) && items.length
+          ? items.map((i, idx) => ({
               id: i.id || `yaml_${idx}`,
-              name: i.name || i.path.split("/").pop(),
-              path: normalizedPath,
-            });
-          }
-        });
-      }
+              name: i.name || (i.path || "").split("/").pop() || `config_${idx}`,
+              path: normalizePath(i.path || ""),
+            }))
+          : [];
+      // Always add a Custom entry at the end.
+      normalized.push({ id: "custom", name: "Custom path", path: "models/path/to/config.yaml" });
+      configSources = normalized.filter((s) => s.path);
     })
     .catch(() => {})
     .finally(() => {
+      if (!configSources.length) {
+        configSources = [{ id: "custom", name: "Custom path", path: "models/path/to/config.yaml" }];
+      }
       cfgState.selected = configSources[0].id;
       cfgState.path = configSources[0].path;
       renderSourcePicker();

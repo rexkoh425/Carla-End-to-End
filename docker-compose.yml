@@ -54,13 +54,14 @@ services:
     command:
       [
           "--server",
-          "-m", "/models/llm/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+          "-m", "/Storage/LlamaDataset/tinyllama-1.1b-chat-v1.0.F16.gguf",
           "-c", "1024",
           "--port", "8081",
           "--host", "0.0.0.0",
         ]
     volumes:
       - ./models:/models:ro
+      - D:/Datasets:/Storage:ro
     ports:
       - "8081:8081"
     restart: unless-stopped

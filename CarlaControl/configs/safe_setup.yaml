@@ -1,0 +1,11 @@
+# Safer/slower recording to avoid stalls and collisions
+fps: 20                 # moderate FPS to reduce tick/encoding load
+image_w: 1280
+image_h: 720
+lidar_range: 50
+enable_depth: false
+enable_radar: false
+tm_global_speedup: 0    # no global speed-up
+tm_vehicle_speedup: 0   # no per-vehicle speed-up
+tm_desired_speed_kmh: 35
+notes: "Record on the same map with minimal sensors; keep traffic modest and replay with the same settings."

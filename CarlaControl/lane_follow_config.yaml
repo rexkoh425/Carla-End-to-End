@@ -1,0 +1,11 @@
+# Default config for lane_follow.py
+host: 127.0.0.1
+port: 2000
+cam_w: 640
+cam_h: 360
+fov: 90.0
+sensor: semantic   # semantic | rgb
+throttle: 0.35
+kp: 0.8
+kd: 0.2
+lane_shift: 0.0    # -0.1 to hug left, +0.1 to hug right

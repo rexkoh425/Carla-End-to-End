@@ -1,452 +1,337 @@
-﻿[
-    {
-        "id":  "blip_caption_renamer_config",
-        "name":  "blip_caption_renamer_config",
-        "path":  "BLIP/blip_caption_renamer_config.yaml"
-    },
-    {
-        "id":  "bug",
-        "name":  "bug",
-        "path":  "CVAT/.github/ISSUE_TEMPLATE/bug.yaml"
-    },
-    {
-        "id":  "feature_request",
-        "name":  "feature_request",
-        "path":  "CVAT/.github/ISSUE_TEMPLATE/feature_request.yaml"
-    },
-    {
-        "id":  "config",
-        "name":  "config",
-        "path":  "CVAT/.regal/config.yaml"
-    },
-    {
-        "id":  "chart",
-        "name":  "Chart",
-        "path":  "CVAT/helm-chart/Chart.yaml"
-    },
-    {
-        "id":  "cvat_values",
-        "name":  "cvat.values",
-        "path":  "CVAT/helm-chart/cvat.values.yaml"
-    },
-    {
-        "id":  "test_values",
-        "name":  "test.values",
-        "path":  "CVAT/helm-chart/test.values.yaml"
-    },
-    {
-        "id":  "values",
-        "name":  "values",
-        "path":  "CVAT/helm-chart/values.yaml"
-    },
-    {
-        "id":  "ingress",
-        "name":  "ingress",
-        "path":  "CVAT/helm-chart/templates/ingress.yaml"
-    },
-    {
-        "id":  "ingress",
-        "name":  "ingress",
-        "path":  "CVAT/helm-chart/templates/analytics/ingress.yaml"
-    },
-    {
-        "id":  "forwardauth",
-        "name":  "forwardauth",
-        "path":  "CVAT/helm-chart/templates/analytics/middlewares/forwardauth.yaml"
-    },
-    {
-        "id":  "stripprefix",
-        "name":  "stripprefix",
-        "path":  "CVAT/helm-chart/templates/analytics/middlewares/stripprefix.yaml"
-    },
-    {
-        "id":  "function_gpu",
-        "name":  "function-gpu",
-        "path":  "CVAT/serverless/onnx/WongKinYiu/yolov7/nuclio/function-gpu.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/onnx/WongKinYiu/yolov7/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/dextr/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/intel/face-detection-0205/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/intel/person-reidentification-retail-0277/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/intel/semantic-segmentation-adas-0001/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/intel/text-detection-0004/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/public/faster_rcnn_inception_resnet_v2_atrous_coco/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/public/mask_rcnn_inception_resnet_v2_atrous_coco/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/openvino/omz/public/yolo-v3-tf/nuclio/function.yaml"
-    },
-    {
-        "id":  "function_gpu",
-        "name":  "function-gpu",
-        "path":  "CVAT/serverless/pytorch/dschoerk/transt/nuclio/function-gpu.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/pytorch/dschoerk/transt/nuclio/function.yaml"
-    },
-    {
-        "id":  "function_gpu",
-        "name":  "function-gpu",
-        "path":  "CVAT/serverless/pytorch/facebookresearch/detectron2/retinanet_r101/nuclio/function-gpu.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/pytorch/facebookresearch/detectron2/retinanet_r101/nuclio/function.yaml"
-    },
-    {
-        "id":  "function_gpu",
-        "name":  "function-gpu",
-        "path":  "CVAT/serverless/pytorch/facebookresearch/sam/nuclio/function-gpu.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/pytorch/facebookresearch/sam/nuclio/function.yaml"
-    },
-    {
-        "id":  "function_gpu",
-        "name":  "function-gpu",
-        "path":  "CVAT/serverless/pytorch/foolwood/siammask/nuclio/function-gpu.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/pytorch/foolwood/siammask/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/pytorch/mmpose/hrnet32/nuclio/function.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/pytorch/shiyinzhang/iog/nuclio/function.yaml"
-    },
-    {
-        "id":  "function_gpu",
-        "name":  "function-gpu",
-        "path":  "CVAT/serverless/tensorflow/faster_rcnn_inception_v2_coco/nuclio/function-gpu.yaml"
-    },
-    {
-        "id":  "function",
-        "name":  "function",
-        "path":  "CVAT/serverless/tensorflow/faster_rcnn_inception_v2_coco/nuclio/function.yaml"
-    },
+[
     {
         "id":  "cyclegan_video_config",
         "name":  "cyclegan_video_config",
-        "path":  "CycleGAN/cyclegan_video_config.yaml"
-    },
-    {
-        "id":  "depth_anything_v2_video_config",
-        "name":  "depth_anything_v2_video_config",
-        "path":  "DepthAnything/depth_anything_v2_video_config.yaml"
-    },
-    {
-        "id":  "dinox_client_config",
-        "name":  "dinox_client_config",
-        "path":  "DINO-X/dinox_client_config.yaml"
-    },
-    {
-        "id":  "internvl8b_runner_config",
-        "name":  "internvl8b_runner_config",
-        "path":  "InternVL/internvl8b_runner_config.yaml"
-    },
-    {
-        "id":  "laneatt_inference_config",
-        "name":  "laneatt_inference_config",
-        "path":  "LaneATT/laneatt_inference_config.yaml"
-    },
-    {
-        "id":  "laneatt_model_config",
-        "name":  "laneatt_model_config",
-        "path":  "LaneATT/laneatt_model_config.yaml"
-    },
-    {
-        "id":  "mask2former_finetune_config",
-        "name":  "mask2former_finetune_config",
-        "path":  "Mask2Former/mask2former_finetune_config.yaml"
-    },
-    {
-        "id":  "mask2former_lane_segmenter_config",
-        "name":  "mask2former_lane_segmenter_config",
-        "path":  "Mask2Former/mask2former_lane_segmenter_config.yaml"
-    },
-    {
-        "id":  "sql_moe_orchestrator_config",
-        "name":  "sql_moe_orchestrator_config",
-        "path":  "MoE/sql_moe_orchestrator_config.yaml"
-    },
-    {
-        "id":  "persformer_openlane_runner_config",
-        "name":  "persformer_openlane_runner_config",
-        "path":  "PersFormer/persformer_openlane_runner_config.yaml"
-    },
-    {
-        "id":  "qwen3_runner_config",
-        "name":  "qwen3_runner_config",
-        "path":  "Qwen3/qwen3_runner_config.yaml"
-    },
-    {
-        "id":  "eval_base",
-        "name":  "eval_base",
-        "path":  "SAM3/sam3/train/configs/eval_base.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_attributes",
-        "name":  "sam3_gold_image_attributes",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_attributes.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_crowded",
-        "name":  "sam3_gold_image_crowded",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_crowded.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_fg_food",
-        "name":  "sam3_gold_image_fg_food",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_fg_food.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_fg_sports",
-        "name":  "sam3_gold_image_fg_sports",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_fg_sports.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_metaclip_nps",
-        "name":  "sam3_gold_image_metaclip_nps",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_metaclip_nps.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_sa1b_nps",
-        "name":  "sam3_gold_image_sa1b_nps",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_sa1b_nps.yaml"
-    },
-    {
-        "id":  "sam3_gold_image_wiki_common",
-        "name":  "sam3_gold_image_wiki_common",
-        "path":  "SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_wiki_common.yaml"
-    },
-    {
-        "id":  "odinw_text_and_visual",
-        "name":  "odinw_text_and_visual",
-        "path":  "SAM3/sam3/train/configs/odinw13/odinw_text_and_visual.yaml"
-    },
-    {
-        "id":  "odinw_text_only",
-        "name":  "odinw_text_only",
-        "path":  "SAM3/sam3/train/configs/odinw13/odinw_text_only.yaml"
-    },
-    {
-        "id":  "odinw_text_only_positive",
-        "name":  "odinw_text_only_positive",
-        "path":  "SAM3/sam3/train/configs/odinw13/odinw_text_only_positive.yaml"
-    },
-    {
-        "id":  "odinw_text_only_train",
-        "name":  "odinw_text_only_train",
-        "path":  "SAM3/sam3/train/configs/odinw13/odinw_text_only_train.yaml"
-    },
-    {
-        "id":  "odinw_visual_only",
-        "name":  "odinw_visual_only",
-        "path":  "SAM3/sam3/train/configs/odinw13/odinw_visual_only.yaml"
-    },
-    {
-        "id":  "roboflow_v100_eval",
-        "name":  "roboflow_v100_eval",
-        "path":  "SAM3/sam3/train/configs/roboflow_v100/roboflow_v100_eval.yaml"
-    },
-    {
-        "id":  "roboflow_v100_full_ft_100_images",
-        "name":  "roboflow_v100_full_ft_100_images",
-        "path":  "SAM3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml"
-    },
-    {
-        "id":  "saco_veval_sav_test",
-        "name":  "saco_veval_sav_test",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_test.yaml"
-    },
-    {
-        "id":  "saco_veval_sav_test_noheur",
-        "name":  "saco_veval_sav_test_noheur",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_test_noheur.yaml"
-    },
-    {
-        "id":  "saco_veval_sav_val",
-        "name":  "saco_veval_sav_val",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_val.yaml"
-    },
-    {
-        "id":  "saco_veval_sav_val_noheur",
-        "name":  "saco_veval_sav_val_noheur",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_val_noheur.yaml"
-    },
-    {
-        "id":  "saco_veval_smartglasses_test",
-        "name":  "saco_veval_smartglasses_test",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_test.yaml"
-    },
-    {
-        "id":  "saco_veval_smartglasses_test_noheur",
-        "name":  "saco_veval_smartglasses_test_noheur",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_test_noheur.yaml"
-    },
-    {
-        "id":  "saco_veval_smartglasses_val",
-        "name":  "saco_veval_smartglasses_val",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_val.yaml"
-    },
-    {
-        "id":  "saco_veval_smartglasses_val_noheur",
-        "name":  "saco_veval_smartglasses_val_noheur",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_val_noheur.yaml"
-    },
-    {
-        "id":  "saco_veval_yt1b_test",
-        "name":  "saco_veval_yt1b_test",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_test.yaml"
-    },
-    {
-        "id":  "saco_veval_yt1b_test_noheur",
-        "name":  "saco_veval_yt1b_test_noheur",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_test_noheur.yaml"
-    },
-    {
-        "id":  "saco_veval_yt1b_val",
-        "name":  "saco_veval_yt1b_val",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_val.yaml"
-    },
-    {
-        "id":  "saco_veval_yt1b_val_noheur",
-        "name":  "saco_veval_yt1b_val_noheur",
-        "path":  "SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_val_noheur.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_bdd100k",
-        "name":  "sam3_silver_image_bdd100k",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_bdd100k.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_droid",
-        "name":  "sam3_silver_image_droid",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_droid.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_ego4d",
-        "name":  "sam3_silver_image_ego4d",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_ego4d.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_fathomnet",
-        "name":  "sam3_silver_image_fathomnet",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_fathomnet.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_food_rec",
-        "name":  "sam3_silver_image_food_rec",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_food_rec.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_geode",
-        "name":  "sam3_silver_image_geode",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_geode.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_inaturalist",
-        "name":  "sam3_silver_image_inaturalist",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_inaturalist.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_nga",
-        "name":  "sam3_silver_image_nga",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_nga.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_sav",
-        "name":  "sam3_silver_image_sav",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_sav.yaml"
-    },
-    {
-        "id":  "sam3_silver_image_yt1b",
-        "name":  "sam3_silver_image_yt1b",
-        "path":  "SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_yt1b.yaml"
-    },
-    {
-        "id":  "config_frames",
-        "name":  "CONFIG_FRAMES",
-        "path":  "SAM3/scripts/eval/silver/CONFIG_FRAMES.yaml"
+        "path":  "models/generative/CycleGAN/cyclegan_video_config.yaml"
     },
     {
         "id":  "sdxl_runner_config",
         "name":  "sdxl_runner_config",
-        "path":  "SDXL/sdxl_runner_config.yaml"
+        "path":  "models/generative/SDXL/sdxl_runner_config.yaml"
     },
     {
-        "id":  "data",
-        "name":  "data",
-        "path":  "Storage/LaneDataSet/YOLO/archive4_lane_yolo/data.yaml"
+        "id":  "deepseek_runner_config",
+        "name":  "deepseek_runner_config",
+        "path":  "models/llm/DeepSeek/deepseek_runner_config.yaml"
+    },
+    {
+        "id":  "qwen3_runner_config",
+        "name":  "qwen3_runner_config",
+        "path":  "models/llm/Qwen3/qwen3_runner_config.yaml"
+    },
+    {
+        "id":  "finetune_config",
+        "name":  "finetune_config",
+        "path":  "models/llm/tinyllama/finetune_config.yaml"
+    },
+    {
+        "id":  "blip_caption_renamer_config",
+        "name":  "blip_caption_renamer_config",
+        "path":  "models/multimodal/BLIP/blip_caption_renamer_config.yaml"
+    },
+    {
+        "id":  "internvl8b_runner_config",
+        "name":  "internvl8b_runner_config",
+        "path":  "models/multimodal/InternVL/internvl8b_runner_config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/multimodal/multimodal_control/config.yaml"
+    },
+    {
+        "id":  "freeze_config",
+        "name":  "freeze_config",
+        "path":  "models/multimodal/partial_bev/freeze_config.yaml"
+    },
+    {
+        "id":  "mask2former_finetune_config",
+        "name":  "mask2former_finetune_config",
+        "path":  "models/segmentation/Mask2Former/mask2former_finetune_config.yaml"
+    },
+    {
+        "id":  "mask2former_lane_segmenter_config",
+        "name":  "mask2former_lane_segmenter_config",
+        "path":  "models/segmentation/Mask2Former/mask2former_lane_segmenter_config.yaml"
+    },
+    {
+        "id":  "eval_base",
+        "name":  "eval_base",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/eval_base.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_attributes",
+        "name":  "sam3_gold_image_attributes",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_attributes.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_crowded",
+        "name":  "sam3_gold_image_crowded",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_crowded.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_fg_food",
+        "name":  "sam3_gold_image_fg_food",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_fg_food.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_fg_sports",
+        "name":  "sam3_gold_image_fg_sports",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_fg_sports.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_metaclip_nps",
+        "name":  "sam3_gold_image_metaclip_nps",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_metaclip_nps.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_sa1b_nps",
+        "name":  "sam3_gold_image_sa1b_nps",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_sa1b_nps.yaml"
+    },
+    {
+        "id":  "sam3_gold_image_wiki_common",
+        "name":  "sam3_gold_image_wiki_common",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/gold_image_evals/sam3_gold_image_wiki_common.yaml"
+    },
+    {
+        "id":  "odinw_text_and_visual",
+        "name":  "odinw_text_and_visual",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/odinw13/odinw_text_and_visual.yaml"
+    },
+    {
+        "id":  "odinw_text_only",
+        "name":  "odinw_text_only",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/odinw13/odinw_text_only.yaml"
+    },
+    {
+        "id":  "odinw_text_only_positive",
+        "name":  "odinw_text_only_positive",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/odinw13/odinw_text_only_positive.yaml"
+    },
+    {
+        "id":  "odinw_text_only_train",
+        "name":  "odinw_text_only_train",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/odinw13/odinw_text_only_train.yaml"
+    },
+    {
+        "id":  "odinw_visual_only",
+        "name":  "odinw_visual_only",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/odinw13/odinw_visual_only.yaml"
+    },
+    {
+        "id":  "roboflow_v100_eval",
+        "name":  "roboflow_v100_eval",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/roboflow_v100/roboflow_v100_eval.yaml"
+    },
+    {
+        "id":  "roboflow_v100_full_ft_100_images",
+        "name":  "roboflow_v100_full_ft_100_images",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml"
+    },
+    {
+        "id":  "saco_veval_sav_test",
+        "name":  "saco_veval_sav_test",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_test.yaml"
+    },
+    {
+        "id":  "saco_veval_sav_test_noheur",
+        "name":  "saco_veval_sav_test_noheur",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_test_noheur.yaml"
+    },
+    {
+        "id":  "saco_veval_sav_val",
+        "name":  "saco_veval_sav_val",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_val.yaml"
+    },
+    {
+        "id":  "saco_veval_sav_val_noheur",
+        "name":  "saco_veval_sav_val_noheur",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_sav_val_noheur.yaml"
+    },
+    {
+        "id":  "saco_veval_smartglasses_test",
+        "name":  "saco_veval_smartglasses_test",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_test.yaml"
+    },
+    {
+        "id":  "saco_veval_smartglasses_test_noheur",
+        "name":  "saco_veval_smartglasses_test_noheur",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_test_noheur.yaml"
+    },
+    {
+        "id":  "saco_veval_smartglasses_val",
+        "name":  "saco_veval_smartglasses_val",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_val.yaml"
+    },
+    {
+        "id":  "saco_veval_smartglasses_val_noheur",
+        "name":  "saco_veval_smartglasses_val_noheur",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_smartglasses_val_noheur.yaml"
+    },
+    {
+        "id":  "saco_veval_yt1b_test",
+        "name":  "saco_veval_yt1b_test",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_test.yaml"
+    },
+    {
+        "id":  "saco_veval_yt1b_test_noheur",
+        "name":  "saco_veval_yt1b_test_noheur",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_test_noheur.yaml"
+    },
+    {
+        "id":  "saco_veval_yt1b_val",
+        "name":  "saco_veval_yt1b_val",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_val.yaml"
+    },
+    {
+        "id":  "saco_veval_yt1b_val_noheur",
+        "name":  "saco_veval_yt1b_val_noheur",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/saco_video_evals/saco_veval_yt1b_val_noheur.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_bdd100k",
+        "name":  "sam3_silver_image_bdd100k",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_bdd100k.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_droid",
+        "name":  "sam3_silver_image_droid",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_droid.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_ego4d",
+        "name":  "sam3_silver_image_ego4d",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_ego4d.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_fathomnet",
+        "name":  "sam3_silver_image_fathomnet",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_fathomnet.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_food_rec",
+        "name":  "sam3_silver_image_food_rec",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_food_rec.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_geode",
+        "name":  "sam3_silver_image_geode",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_geode.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_inaturalist",
+        "name":  "sam3_silver_image_inaturalist",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_inaturalist.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_nga",
+        "name":  "sam3_silver_image_nga",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_nga.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_sav",
+        "name":  "sam3_silver_image_sav",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_sav.yaml"
+    },
+    {
+        "id":  "sam3_silver_image_yt1b",
+        "name":  "sam3_silver_image_yt1b",
+        "path":  "models/segmentation/SAM3/sam3/train/configs/silver_image_evals/sam3_silver_image_yt1b.yaml"
+    },
+    {
+        "id":  "CONFIG_FRAMES",
+        "name":  "CONFIG_FRAMES",
+        "path":  "models/segmentation/SAM3/scripts/eval/silver/CONFIG_FRAMES.yaml"
+    },
+    {
+        "id":  "sql_moe_orchestrator_config",
+        "name":  "sql_moe_orchestrator_config",
+        "path":  "models/time_series/MoE/sql_moe_orchestrator_config.yaml"
     },
     {
         "id":  "fpv_video_scraper_config",
         "name":  "fpv_video_scraper_config",
-        "path":  "VideoHarvester/fpv_video_scraper_config.yaml"
+        "path":  "models/video/VideoHarvester/fpv_video_scraper_config.yaml"
     },
     {
         "id":  "video_upscale_config",
         "name":  "video_upscale_config",
-        "path":  "VideoProcessingLab/video_upscale_config.yaml"
+        "path":  "models/video/VideoProcessingLab/video_upscale_config.yaml"
     },
     {
-        "id":  "candlestick_scraper_config",
-        "name":  "candlestick_scraper_config",
-        "path":  "WebHarvesting/CandleScraper/candlestick_scraper_config.yaml"
+        "id":  "depth_anything_v2_video_config",
+        "name":  "depth_anything_v2_video_config",
+        "path":  "models/vision/DepthAnything/depth_anything_v2_video_config.yaml"
     },
     {
-        "id":  "pattern_image_classifier_config",
-        "name":  "pattern_image_classifier_config",
-        "path":  "WebHarvesting/PatternClassifier/pattern_image_classifier_config.yaml"
+        "id":  "dinox_client_config",
+        "name":  "dinox_client_config",
+        "path":  "models/vision/DINO-X/dinox_client_config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r122_culane/config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r122_tusimple/config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r18_culane/config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r18_llamas/config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r18_tusimple/config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r34_culane/config.yaml"
+    },
+    {
+        "id":  "config",
+        "name":  "config",
+        "path":  "models/vision/LaneATT/experiments/laneatt_r34_tusimple/config.yaml"
+    },
+    {
+        "id":  "laneatt_inference_config",
+        "name":  "laneatt_inference_config",
+        "path":  "models/vision/LaneATT/laneatt_inference_config.yaml"
+    },
+    {
+        "id":  "laneatt_model_config",
+        "name":  "laneatt_model_config",
+        "path":  "models/vision/LaneATT/laneatt_model_config.yaml"
+    },
+    {
+        "id":  "persformer_openlane_runner_config",
+        "name":  "persformer_openlane_runner_config",
+        "path":  "models/vision/PersFormer/persformer_openlane_runner_config.yaml"
     },
     {
         "id":  "yoloe_bbox_pipeline_config",
         "name":  "yoloe_bbox_pipeline_config",
-        "path":  "YOLOE/yoloe_bbox_pipeline_config.yaml"
+        "path":  "models/vision/YOLOE/yoloe_bbox_pipeline_config.yaml"
+    },
+    {
+        "id":  "candlestick_scraper_config",
+        "name":  "candlestick_scraper_config",
+        "path":  "models/WebHarvesting/CandleScraper/candlestick_scraper_config.yaml"
+    },
+    {
+        "id":  "pattern_image_classifier_config",
+        "name":  "pattern_image_classifier_config",
+        "path":  "models/WebHarvesting/PatternClassifier/pattern_image_classifier_config.yaml"
     }
 ]
