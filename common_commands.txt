@@ -4,10 +4,14 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml down
 docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
 
 
+#### See logs
+
+docker compose -f docker-compose.yml -f docker-compose.override.yml logs -f backend
+
 #### Spliting Dataset ####
 
 docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend \
-  micromamba run -n app python models/llm/tinyllama/utils/split_dataset.py \
+  /opt/venv/bin/python models/llm/tinyllama/utils/split_dataset.py \
     --input /Storage/LlamaDataset/clean_dataset/train.cleaned.jsonl \
     --out-dir /Storage/LlamaDataset/run_2 \
     --val-ratio 0.05 \
@@ -18,7 +22,7 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend
 #### Finetuning Dataset ####
 
 docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend  \
-micromamba run -n app python models/llm/tinyllama/finetune/finetune_tinyllama_best_fp16.py \
+ /opt/venv/bin/python models/llm/tinyllama/finetune/finetune_tinyllama_best_fp16.py \
 --train-jsonl /Storage/LlamaDataset/run_2/train.jsonl \
 --val-jsonl /Storage/LlamaDataset/run_2/val.jsonl \
 --output-dir /Storage/LlamaDataset/run_2/run_2_lora_best_fp16_bs8 \
@@ -34,17 +38,18 @@ micromamba run -n app python models/llm/tinyllama/finetune/finetune_tinyllama_be
 #### Plot training data ####
 
 docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend  \
-micromamba run -n app python models/llm/tinyllama/plot/plot_training.py --input /Storage/LlamaDataset/run_2/run_2_lora_best_fp16_bs8/trainer_state.json --out-dir /Storage/LlamaDataset/run_2/plots --show
+ /opt/venv/bin/python models/llm/tinyllama/plot/plot_training.py --input /Storage/LlamaDataset/run_2/run_2_lora_best_fp16_bs8/trainer_state.json --out-dir /Storage/LlamaDataset/run_2/plots --show
 
 
 #### Replay run.rec
 
 docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend \
-micromamba run -n app python CarlaControl/record_robotaxi.py \
-replay --host host.docker.internal --port 2000 \
---rec-file C:/NUS/MachineLearning/GeneralML/recordings/20251204_104301/run.rec \
---out-dir /recordings \
---replay-speed-factor 1.0 --no-lidar --no-gnss --no-imu
+  /opt/venv/bin/python /app/CarlaControl/record_robotaxi.py \
+  replay --host host.docker.internal --port 2000 \
+  --rec-file C:/NUS/MachineLearning/GeneralML/recordings/20251204_104301/run.rec \
+  --out-dir /recordings \
+  --replay-speed-factor 1.0 --no-lidar --no-gnss --no-imu
+
 
 
 Flags (these flags exist here but they are only used in replay/export logic):
@@ -56,13 +61,30 @@ Flags (these flags exist here but they are only used in replay/export logic):
 #### Create run.rec
 
 docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend \
-micromamba run -n app python CarlaControl/record_robotaxi.py record \
---host host.docker.internal --port 2000 \
---fps 20 --range 50 --duration 20 \
---tm-speed-diff 0 --vehicle-speed-diff 0 \
---out-dir C:/NUS/MachineLearning/GeneralML/recordings
+  /opt/venv/bin/python /app/CarlaControl/record_robotaxi.py record \
+  --host host.docker.internal --port 2000 \
+  --fps 20 --range 50 --duration 20 \
+  --tm-speed-diff 0 --vehicle-speed-diff 0 \
+  --out-dir C:/NUS/MachineLearning/GeneralML/recordings
 
 
 #### Start Carla
 
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d carla
+docker compose -f docker-compose.yml -f docker-compose.override.yml logs -f carla
+
+#### Start Carla (Windows exe fallback)
+
 .\CarlaUE4.exe -RenderOffScreen -nosound -quality-level=Low -carla-rpc-port=2000 -carla-streaming-port=0
+
+
+#### Spawn traffic
+
+docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend \
+  /opt/venv/bin/python /app/CarlaControl/spawn_traffic.py \
+  --host host.docker.internal --port 2000 --tm-port 8000 --vehicles 10 --walkers 10
+
+
+
+Flags
+--safe

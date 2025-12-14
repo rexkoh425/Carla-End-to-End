@@ -11,6 +11,7 @@ from datetime import datetime
 import subprocess
 import sys
 import requests
+import urllib.request
 from typing import Dict, List, Optional, Sequence, Tuple
 from uuid import uuid4
 
@@ -132,6 +133,7 @@ def default_models() -> List[ModelInfo]:
         ModelInfo(id="yolopv2", name="YOLOPv2", weights="models/vision/YOLOPv2/data/weights/yolopv2.pt"),
         ModelInfo(id="laneatt", name="LaneATT", config="models/vision/LaneATT/laneatt_model_config.yaml"),
         ModelInfo(id="yoloe", name="YOLOE", config="../YOLOE/yoloe_bbox_pipeline_config.yaml"),
+        ModelInfo(id="groundingdino", name="GroundingDINO", config="models/detector/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py", weights="models/weights/groundingdino_swint_ogc.pth"),
     ]
 
 
@@ -215,6 +217,7 @@ def _resolve_path(raw: str) -> Path:
     "YOLOP": "models/vision/YOLOP",
     "YOLOPv2": "models/vision/YOLOPv2",
     "YOLOE": "models/vision/YOLOE",
+    "GroundingDINO": "models/detector/GroundingDINO",
     "DepthAnything": "models/vision/DepthAnything",
     "DINO-X": "models/vision/DINO-X",
     "PersFormer": "models/vision/PersFormer",
@@ -1078,6 +1081,82 @@ def _run_yolopv2_stage(input_path: Path, output_path: Path, meta: dict, raw_inpu
   return output_path
 
 
+@lru_cache(maxsize=2)
+def _load_groundingdino_model(config_path: str, weights_path: str, device_raw: str):
+  from groundingdino.util.inference import load_model as gd_load_model
+
+  return gd_load_model(config_path, weights_path, device=device_raw)
+
+
+def _ensure_groundingdino_weights(weights_path: Path, url: str) -> Path:
+  if weights_path.is_file():
+    return weights_path
+  weights_path.parent.mkdir(parents=True, exist_ok=True)
+  urllib.request.urlretrieve(url, weights_path)
+  return weights_path
+
+
+def _run_groundingdino_stage(input_path: Path, output_path: Path, meta: dict, raw_input_path: Optional[Path] = None) -> Path:
+  try:
+    from groundingdino.util.inference import load_image as gd_load_image, predict as gd_predict
+    from torchvision.ops import box_convert
+  except Exception as exc:
+    raise RuntimeError(
+      "GroundingDINO dependencies missing. Install via: pip install -r models/detector/GroundingDINO/requirements.txt"
+    ) from exc
+
+  config_raw = meta.get("config", "models/detector/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py")
+  weights_raw = meta.get("weights", "models/weights/groundingdino_swint_ogc.pth")
+  prompt = meta.get("prompt") or meta.get("text") or meta.get("caption") or "car . person . road"
+  box_threshold = float(meta.get("box_threshold", 0.3))
+  text_threshold = float(meta.get("text_threshold", 0.25))
+  device_raw = str(meta.get("device", "cuda" if torch.cuda.is_available() else "cpu"))
+  default_url = "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0/groundingdino_swint_ogc.pth"
+
+  config_path = _resolve_path(config_raw)
+  weights_path = _resolve_path(weights_raw)
+  weights_path = _ensure_groundingdino_weights(weights_path, default_url)
+  if not config_path.is_file():
+    raise FileNotFoundError(f"GroundingDINO config not found: {config_path}")
+
+  base_bgr = cv2.imread(str(input_path))
+  if base_bgr is None and raw_input_path and raw_input_path.is_file():
+    base_bgr = cv2.imread(str(raw_input_path))
+  if base_bgr is None:
+    raise RuntimeError(f"Failed to read image: {input_path}")
+
+  image_rgb, image_tensor = gd_load_image(str(input_path))
+  model = _load_groundingdino_model(str(config_path), str(weights_path), device_raw)
+  boxes, logits, phrases = gd_predict(
+    model=model,
+    image=image_tensor,
+    caption=prompt,
+    box_threshold=box_threshold,
+    text_threshold=text_threshold,
+    device=device_raw,
+  )
+
+  h, w, _ = base_bgr.shape
+  boxes_xyxy = box_convert(boxes * torch.tensor([w, h, w, h]), in_fmt="cxcywh", out_fmt="xyxy").cpu().numpy()
+  output = base_bgr.copy()
+  for (x1, y1, x2, y2), score, phrase in zip(boxes_xyxy, logits, phrases):
+    x1i, y1i, x2i, y2i = [int(v) for v in (x1, y1, x2, y2)]
+    cv2.rectangle(output, (x1i, y1i), (x2i, y2i), (0, 0, 255), 2)
+    label = f"{phrase} {float(score):.2f}"
+    cv2.putText(output, label, (x1i, max(15, y1i - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+
+  output_path.parent.mkdir(parents=True, exist_ok=True)
+  cv2.imwrite(str(output_path), output)
+  pipeline_logger.info(
+    "GroundingDINO stage: input=%s output=%s device=%s boxes=%d",
+    input_path,
+    output_path,
+    device_raw,
+    len(boxes_xyxy),
+  )
+  return output_path
+
+
 def execute_graph_pipeline(req: PipelineRun, run_id: str) -> Dict:
   """Minimal executor: walk graph order, run mask2former stages, pass files along."""
   output_root = STORAGE_ROOT / "Output"
@@ -1090,6 +1169,7 @@ def execute_graph_pipeline(req: PipelineRun, run_id: str) -> Dict:
   id_to_outputs: Dict[str, Path] = {}
   id_to_meta: Dict[str, dict] = {n.get("id"): (n.get("meta") or {}) for n in nodes if n.get("id")}
   id_to_sources: Dict[str, Path] = {}
+  id_to_prompts: Dict[str, str] = {}
 
   steps: List[Dict[str, str]] = []
 
@@ -1107,23 +1187,36 @@ def execute_graph_pipeline(req: PipelineRun, run_id: str) -> Dict:
         raise FileNotFoundError(f"Input not found: {src_path}")
       id_to_outputs[nid] = src_path
       id_to_sources[nid] = src_path
+    if ntype == "Prompt":
+      prompt_val = meta.get("prompt") or ""
+      if prompt_val:
+        id_to_prompts[nid] = prompt_val
 
   for node in ordered:
     nid = node.get("id")
     ntype = node.get("type")
     if ntype in ("Input", "Data"):
       continue
+    if ntype == "Prompt":
+      prompt_val = id_to_meta.get(nid, {}).get("prompt") or ""
+      if prompt_val:
+        id_to_prompts[nid] = prompt_val
+      continue
     incoming = [l for l in links if l.get("to") == nid]
     if not incoming:
       continue
     upstream_path = None
     upstream_source = None
+    upstream_prompt = None
     for l in incoming:
       cand = id_to_outputs.get(l.get("from"))
-      if cand:
+      if cand and upstream_path is None:
         upstream_path = cand
         upstream_source = id_to_sources.get(l.get("from"))
-        break
+      if upstream_prompt is None:
+        pval = id_to_prompts.get(l.get("from"))
+        if pval:
+          upstream_prompt = pval
     if not upstream_path:
       continue
 
@@ -1144,6 +1237,18 @@ def execute_graph_pipeline(req: PipelineRun, run_id: str) -> Dict:
           id_to_outputs[nid] = produced
           id_to_sources[nid] = upstream_source or upstream_path
           steps.append({"node": nid, "type": "yolopv2", "input": str(upstream_path), "output": str(produced)})
+        elif model_id.startswith("groundingdino"):
+          out_path = _derive_output_path(upstream_path, output_root)
+          # Use explicit prompt, otherwise fall back to upstream prompt if present.
+          meta_with_prompt = dict(meta)
+          if not meta_with_prompt.get("prompt") and upstream_prompt:
+            meta_with_prompt["prompt"] = upstream_prompt
+          produced = _run_groundingdino_stage(upstream_path, out_path, meta_with_prompt, upstream_source)
+          id_to_outputs[nid] = produced
+          id_to_sources[nid] = upstream_source or upstream_path
+          if meta_with_prompt.get("prompt"):
+            id_to_prompts[nid] = meta_with_prompt["prompt"]
+          steps.append({"node": nid, "type": "groundingdino", "input": str(upstream_path), "output": str(produced)})
         elif model_id.startswith("laneatt"):
           out_path = _derive_output_path(upstream_path, output_root)
           produced = _run_laneatt_stage(upstream_path, out_path, meta, upstream_source)
@@ -1639,6 +1744,16 @@ def run_script(payload: dict) -> dict:
     "lower_fov",
     "vehicle_bp",
     "timeout",
+    "target_speed_kph",
+    "tm_speed_diff",
+    "vehicle_speed_diff",
+    "replay_speed_factor",
+    "preroll",
+    "ignore_lights",
+    "ignore_signs",
+    "wait_for_motion",
+    "motion_timeout",
+    "max_substeps",
     "lidar_x",
     "lidar_y",
     "lidar_z",
