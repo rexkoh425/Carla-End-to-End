@@ -107,6 +107,22 @@ const models = [
     template: { model: { id: "Qwen/Qwen2.5-14B" }, runtime: { max_tokens: 256 } },
   },
   {
+    id: "groundingdino",
+    name: "GroundingDINO",
+    tags: ["detection"],
+    desc: "Open-vocabulary detection with text prompts.",
+    template: {
+      model: {
+        config: "models/detector/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py",
+        weights: "models/weights/groundingdino_swint_ogc.pth",
+        prompt: "car . person . road",
+        box_threshold: 0.3,
+        text_threshold: 0.25,
+        device: "cuda:0",
+      },
+    },
+  },
+  {
     id: "deepseek",
     name: "DeepSeek 7B Chat",
     tags: ["llm"],
@@ -187,6 +203,7 @@ function defaultMetaForType(type) {
   if (type === "Input" || type === "Data")
     return { source: "Storage/sample_video.mp4", folder: "Storage/input_folder", mode: "single", previewLocal: "" };
   if (type === "Connector") return { middleware: "" };
+  if (type === "Prompt") return { prompt: "car . person . road" };
   if (type === "Debug") return {};
   if (type === "Post") return { output: "Storage/output/", outputPreviewPath: "", outputPreviewLocal: "" };
   if (type === "Model") return { modelId: state.selectedModel || models[0].id };
@@ -286,6 +303,8 @@ function connectorRoles(type) {
       return ["in"];
     case "Debug":
       return ["in", "out"];
+    case "Prompt":
+      return ["out"];
     case "Model":
     case "Connector":
       // left = input, right = output
@@ -741,6 +760,17 @@ function renderNodeControl(node) {
   if (node.type === "Connector") {
     return base("middleware", "Select middleware file...");
   }
+  if (node.type === "Prompt") {
+    return `
+      <div class="node-control">
+        <div class="node-control-row">
+          <input class="node-gdino-prompt" data-node="${node.id}" placeholder="Enter prompt e.g. car . person . road" value="${htmlEscape(
+            meta.prompt || ""
+          )}" />
+        </div>
+      </div>
+    `;
+  }
   if (node.type === "Post") {
     const isSingle = isGraphSingleMode();
     const previewUrl =
@@ -783,6 +813,24 @@ function renderNodeControl(node) {
           )}</option>`
       )
       .join("");
+    const isGDino = meta.modelId === "groundingdino";
+    const gdPrompt = meta.prompt || "car . person . road";
+    const gdBox = meta.box_threshold !== undefined ? meta.box_threshold : 0.3;
+    const gdText = meta.text_threshold !== undefined ? meta.text_threshold : 0.25;
+    const gdinoControls = isGDino
+      ? `
+      <div class="node-control">
+        <div class="node-control-row">
+          <input class="node-gdino-prompt" data-node="${node.id}" placeholder="Prompt e.g. car . person . road" value="${htmlEscape(
+            gdPrompt
+          )}" />
+        </div>
+        <div class="node-control-row">
+          <input class="node-gdino-box" type="number" step="0.01" data-node="${node.id}" value="${gdBox}" title="Box threshold" />
+          <input class="node-gdino-text" type="number" step="0.01" data-node="${node.id}" value="${gdText}" title="Text threshold" />
+        </div>
+      </div>`
+      : "";
     return `
       <div class="node-control">
         <div class="node-control-row">
@@ -791,6 +839,7 @@ function renderNodeControl(node) {
           </select>
         </div>
       </div>
+      ${gdinoControls}
     `;
   }
   return "";
@@ -912,6 +961,23 @@ function bindNodeControls(div, node) {
       // Clear cached previews so downstream Debug/Post nodes don't show stale outputs after a model swap.
       clearCachedPreviews();
       renderGraph();
+    });
+  });
+  div.querySelectorAll(".node-gdino-prompt").forEach((input) => {
+    input.addEventListener("change", (e) => {
+      updateNodeMeta(node.id, { prompt: e.target.value || "" });
+    });
+  });
+  div.querySelectorAll(".node-gdino-box").forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const v = parseFloat(e.target.value);
+      updateNodeMeta(node.id, { box_threshold: Number.isFinite(v) ? v : 0.3 });
+    });
+  });
+  div.querySelectorAll(".node-gdino-text").forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const v = parseFloat(e.target.value);
+      updateNodeMeta(node.id, { text_threshold: Number.isFinite(v) ? v : 0.25 });
     });
   });
 }

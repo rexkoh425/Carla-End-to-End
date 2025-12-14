@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    depends_on:
+      - carla
+    mem_limit: "16g"
     ports:
       - "7000:7000"
     volumes:
@@ -24,6 +27,35 @@ services:
       - LOCALAI_MODEL=gpt-4o-mini-ally
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  carla:
+    build:
+      context: .
+      dockerfile: Carla/Dockerfile
+    mem_limit: "16g"
+    ports:
+      - "2000-2002:2000-2002"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
+    gpus: all
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
+    shm_size: "4g"
+    restart: unless-stopped
+    command:
+      [
+        "bash",
+        "CarlaUE4.sh",
+        "-RenderOffScreen",
+        "-nosound",
+        "-quality-level=Low",
+        "-carla-rpc-port=2000",
+        "-carla-streaming-port=0"
+      ]
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest

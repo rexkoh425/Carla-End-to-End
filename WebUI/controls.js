@@ -188,6 +188,8 @@ function bindControls() {
       const duration = parseFloat(document.getElementById("rec-duration")?.value || "15");
       const fps = parseFloat(document.getElementById("rec-fps")?.value || "10");
       const range = parseFloat(document.getElementById("rec-range")?.value || "100");
+      const targetSpeed = parseFloat(document.getElementById("robotaxi-speed")?.value || "45");
+      const tmSpeedDiff = parseFloat(document.getElementById("robotaxi-tm-diff")?.value || "0");
       const autopilotSelect = document.getElementById("autopilot-select");
       const autopilot = autopilotSelect ? autopilotSelect.value === "on" : true;
       runScript("record_robotaxi", {
@@ -196,6 +198,8 @@ function bindControls() {
         duration,
         fps,
         range,
+        target_speed_kph: isNaN(targetSpeed) ? 45 : targetSpeed,
+        tm_speed_diff: isNaN(tmSpeedDiff) ? 0 : tmSpeedDiff,
         no_autopilot: !autopilot,
       });
     });

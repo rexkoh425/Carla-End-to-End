@@ -43,6 +43,12 @@ import carla
 # --------------------------
 
 PID_FILE = Path("/tmp/record_robotaxi.pid")
+DEFAULT_TARGET_SPEED_KPH = 45.0  # fallback if user does not provide one
+DEFAULT_PREROLL_S = 1.0  # settle TM/autopilot before recording
+WAIT_FOR_MOTION_DEFAULT = True
+MOTION_THRESHOLD_MPS = 1.0
+MOTION_TIMEOUT_S = 15.0
+DEFAULT_MAX_SUBSTEPS = 10
 
 
 def _read_pid() -> int | None:
@@ -155,18 +161,40 @@ def safe_destroy(actor: Optional[carla.Actor]) -> None:
         pass
 
 
-def apply_sync(world: carla.World, tm: carla.TrafficManager, fps: float) -> Tuple[carla.WorldSettings, float]:
+def apply_sync(world: carla.World, tm: carla.TrafficManager, fps: float, max_substeps: int = DEFAULT_MAX_SUBSTEPS) -> Tuple[carla.WorldSettings, float]:
     original = world.get_settings()
     fixed_dt = 1.0 / float(fps)
 
     s = world.get_settings()
     s.synchronous_mode = True
     s.fixed_delta_seconds = fixed_dt
-    s.max_substeps = 1
+    s.max_substeps = max(1, int(max_substeps))
+    s.max_substep_delta_time = fixed_dt / float(s.max_substeps)
     world.apply_settings(s)
 
     tm.set_synchronous_mode(True)
     return original, fixed_dt
+
+
+def wait_for_motion(world: carla.World, hero: carla.Vehicle, thresh_mps: float, timeout_s: float, fallback_dt: float) -> Tuple[bool, int, float]:
+    """
+    Tick the world until the hero reaches a minimum speed.
+    Returns (success, ticks_waited, last_speed_mps).
+    """
+    t0 = time.time()
+    ticks = 0
+    last_speed = 0.0
+    while time.time() - t0 < timeout_s:
+        _, snap = tick_and_snapshot(world)
+        vel = hero.get_velocity()
+        last_speed = math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)
+        ticks += 1
+        if last_speed >= thresh_mps:
+            return True, ticks, last_speed
+        # Avoid tight loop if something is off with tick()
+        if fallback_dt > 0:
+            time.sleep(min(0.005, fallback_dt * 0.5))
+    return False, ticks, last_speed
 
 
 def restore_world(world: carla.World, tm: carla.TrafficManager, original: carla.WorldSettings) -> None:
@@ -312,9 +340,11 @@ def do_record(args) -> Path:
     except Exception:
         pass
 
-    original_settings, fixed_dt = apply_sync(world, tm, args.fps)
+    original_settings, fixed_dt = apply_sync(world, tm, args.fps, args.max_substeps)
 
     hero = None
+    approx_distance_m = 0.0
+    prev_loc_for_dist = None
     try:
         candidates = bp_lib.filter(args.vehicle_bp)
         if not candidates:
@@ -336,8 +366,14 @@ def do_record(args) -> Path:
 
         hero.set_autopilot(True, tm.get_port())
         try:
-            if args.target_speed_kph is not None:
-                tm.set_desired_speed(hero, float(args.target_speed_kph))
+            desired_kph = args.target_speed_kph
+            if desired_kph is None:
+                desired_kph = DEFAULT_TARGET_SPEED_KPH
+            if desired_kph and desired_kph > 0:
+                tm.set_desired_speed(hero, float(desired_kph))
+            # Keep the car moving; lights often hold the hero near spawn.
+            tm.ignore_lights_percentage(hero, 100.0 if args.ignore_lights else 0.0)
+            tm.ignore_signs_percentage(hero, 100.0 if args.ignore_signs else 0.0)
             if args.vehicle_speed_diff is not None:
                 tm.vehicle_percentage_speed_difference(hero, float(args.vehicle_speed_diff))
         except Exception:
@@ -346,12 +382,34 @@ def do_record(args) -> Path:
         duration_s = float(args.duration)
         total_frames = int(round(duration_s * float(args.fps)))
 
+        # Small pre-roll so TM/autopilot settles before recording.
+        preroll_frames = int(round(float(args.preroll) * float(args.fps)))
+        for _ in range(max(1, preroll_frames)):
+            tick_and_snapshot(world)
+
+        # Optionally wait until the hero is actually moving (still respects lights if not ignored).
+        waited_ticks = 0
+        if args.wait_for_motion:
+            ok, waited_ticks, last_speed = wait_for_motion(
+                world, hero, MOTION_THRESHOLD_MPS, args.motion_timeout, fixed_dt
+            )
+            if ok:
+                print(f"[record] motion detected after {waited_ticks} ticks (speed={last_speed:.2f} m/s); starting recorder")
+            else:
+                print(f"[record] WARNING: hero did not reach {MOTION_THRESHOLD_MPS} m/s within {args.motion_timeout}s; starting anyway")
+
         client.start_recorder(str(rec_path_remote))
         print(f"[record] start_recorder -> {rec_path_remote}")
 
         tick_and_snapshot(world)  # settle one frame
         for i in range(total_frames):
             frame_id, snapshot = tick_and_snapshot(world)
+            loc = hero.get_location()
+            if prev_loc_for_dist is not None:
+                approx_distance_m += math.sqrt(
+                    (loc.x - prev_loc_for_dist.x) ** 2 + (loc.y - prev_loc_for_dist.y) ** 2 + (loc.z - prev_loc_for_dist.z) ** 2
+                )
+            prev_loc_for_dist = loc
             if i % int(max(1, args.fps)) == 0:
                 sim_t = snapshot.timestamp.elapsed_seconds if snapshot else i / float(args.fps)
                 print(f"[record] frame {i}/{total_frames} sim_t={sim_t:.2f}s (frame={frame_id})")
@@ -376,6 +434,13 @@ def do_record(args) -> Path:
             "target_speed_kph": args.target_speed_kph,
             "tm_speed_diff": args.tm_speed_diff,
             "vehicle_speed_diff": args.vehicle_speed_diff,
+            "approx_distance_m": float(approx_distance_m),
+            "preroll_s": float(args.preroll),
+            "ignore_lights": bool(args.ignore_lights),
+            "ignore_signs": bool(args.ignore_signs),
+            "waited_motion_ticks": int(waited_ticks),
+            "motion_threshold_mps": float(MOTION_THRESHOLD_MPS),
+            "motion_timeout_s": float(args.motion_timeout),
             "timestamp_utc": now_stamp_utc(),
         }
         meta_path.write_text(json.dumps(meta, indent=2))
@@ -526,7 +591,8 @@ def do_replay(args) -> Path:
     bp_lib = world.get_blueprint_library()
     tm = client.get_trafficmanager(args.tm_port)
 
-    original_settings, fixed_dt = apply_sync(world, tm, fps)
+    max_substeps = getattr(args, "max_substeps", DEFAULT_MAX_SUBSTEPS)
+    original_settings, fixed_dt = apply_sync(world, tm, fps, max_substeps)
 
     rig: Dict[str, carla.Actor] = {}
     queues: Dict[str, queue.Queue] = {}
@@ -587,6 +653,9 @@ def do_replay(args) -> Path:
             ("obj_tag", np.uint32),
         ])
 
+        prev_loc = None
+        prev_time = None
+
         for i in range(total_frames):
             frame_id, snapshot = tick_and_snapshot(world)
             f = snapshot.frame if snapshot else frame_id
@@ -613,7 +682,24 @@ def do_replay(args) -> Path:
             rot = hero.get_transform().rotation
             vel = hero.get_velocity()
             ang = hero.get_angular_velocity()
-            speed = math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)
+
+            # Derive speed from pose deltas (replayer may zero-out velocity vectors).
+            measured_speed = 0.0
+            if prev_loc is None:
+                prev_loc = loc
+                prev_time = snapshot.timestamp.elapsed_seconds if snapshot else i / float(fps)
+            else:
+                dt = (snapshot.timestamp.elapsed_seconds - prev_time) if snapshot else fixed_dt
+                dt = dt if dt and dt > 0 else fixed_dt
+                dist = math.sqrt(
+                    (loc.x - prev_loc.x) ** 2 + (loc.y - prev_loc.y) ** 2 + (loc.z - prev_loc.z) ** 2
+                )
+                measured_speed = dist / max(dt, 1e-6)
+                prev_loc = loc
+                prev_time = (snapshot.timestamp.elapsed_seconds if snapshot else prev_time + dt)
+
+            raw_speed = math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)
+            speed = measured_speed if measured_speed > 0 else raw_speed
 
             entry = {
                 "frame": int(f),
@@ -628,6 +714,7 @@ def do_replay(args) -> Path:
                 },
                 "state": {
                     "speed_mps": float(speed),
+                    "speed_mps_raw": float(raw_speed),
                     "location": {"x": float(loc.x), "y": float(loc.y), "z": float(loc.z)},
                     "rotation": {"pitch": float(rot.pitch), "yaw": float(rot.yaw), "roll": float(rot.roll)},
                     "velocity": {"x": float(vel.x), "y": float(vel.y), "z": float(vel.z)},
@@ -703,9 +790,15 @@ def build_parser():
     pr.add_argument("--fps", type=float, default=10.0)
     pr.add_argument("--range", type=float, default=100.0)
     pr.add_argument("--vehicle-bp", default="vehicle.*model3*")
-    pr.add_argument("--target-speed-kph", type=float, default=None, help="Autopilot target speed during recording (km/h). Leave unset to use CARLA defaults.")
+    pr.add_argument("--target-speed-kph", type=float, default=None, help=f"Autopilot target speed during recording (km/h). Leave unset to use {DEFAULT_TARGET_SPEED_KPH} km/h; set 0 to keep CARLA default.")
     pr.add_argument("--tm-speed-diff", type=float, default=0.0, help="Traffic manager global speed delta in percent (positive slows). 0 matches CARLA default.")
     pr.add_argument("--vehicle-speed-diff", type=float, default=0.0, help="Per-vehicle speed delta in percent (positive slows). 0 matches CARLA default.")
+    pr.add_argument("--max-substeps", type=int, default=DEFAULT_MAX_SUBSTEPS, help="Physics substeps per tick to reduce wobble (>=1).")
+    pr.add_argument("--preroll", type=float, default=DEFAULT_PREROLL_S, help="Seconds to tick before start_recorder so TM/autopilot stabilizes.")
+    pr.add_argument("--ignore-lights", action="store_true", help="Tell Traffic Manager to ignore traffic lights for hero (helps avoid stalls).")
+    pr.add_argument("--ignore-signs", action="store_true", help="Tell Traffic Manager to ignore traffic signs for hero.")
+    pr.add_argument("--wait-for-motion", action="store_true", default=WAIT_FOR_MOTION_DEFAULT, help="Delay recording until hero speed exceeds threshold.")
+    pr.add_argument("--motion-timeout", type=float, default=MOTION_TIMEOUT_S, help="Max seconds to wait for motion before starting anyway.")
     pr.add_argument("--no-camera", action="store_true", help="(replay/export) skip camera spawn/write")
     pr.add_argument("--no-lidar", action="store_true", help="(replay/export) skip lidar spawn/write")
     pr.add_argument("--no-gnss", action="store_true", help="(replay/export) skip GNSS")
@@ -717,6 +810,7 @@ def build_parser():
     pp.add_argument("--fps", type=float, default=None, help="Override meta.json fps")
     pp.add_argument("--range", type=float, default=None, help="Override meta.json lidar range")
     pp.add_argument("--replay-speed-factor", type=float, default=1.0, help="Time factor for replay (<1 slows, >1 speeds up). 1.0 matches recorded timing.")
+    pp.add_argument("--max-substeps", type=int, default=DEFAULT_MAX_SUBSTEPS, help="Physics substeps per tick to reduce wobble (>=1).")
     pp.add_argument("--no-camera", action="store_true", help="Skip camera spawn/write on replay/export")
     pp.add_argument("--no-lidar", action="store_true", help="Skip lidar spawn/write on replay/export")
     pp.add_argument("--no-gnss", action="store_true", help="Skip GNSS on replay/export")
@@ -727,9 +821,15 @@ def build_parser():
     pb.add_argument("--fps", type=float, default=10.0)
     pb.add_argument("--range", type=float, default=100.0)
     pb.add_argument("--vehicle-bp", default="vehicle.*model3*")
-    pb.add_argument("--target-speed-kph", type=float, default=None, help="Autopilot target speed during recording (km/h). Leave unset to use CARLA defaults.")
+    pb.add_argument("--target-speed-kph", type=float, default=None, help=f"Autopilot target speed during recording (km/h). Leave unset to use {DEFAULT_TARGET_SPEED_KPH} km/h; set 0 to keep CARLA default.")
     pb.add_argument("--tm-speed-diff", type=float, default=0.0, help="Traffic manager global speed delta in percent (positive slows). 0 matches CARLA default.")
     pb.add_argument("--vehicle-speed-diff", type=float, default=0.0, help="Per-vehicle speed delta in percent (positive slows). 0 matches CARLA default.")
+    pb.add_argument("--max-substeps", type=int, default=DEFAULT_MAX_SUBSTEPS, help="Physics substeps per tick to reduce wobble (>=1).")
+    pb.add_argument("--preroll", type=float, default=DEFAULT_PREROLL_S, help="Seconds to tick before start_recorder so TM/autopilot stabilizes.")
+    pb.add_argument("--ignore-lights", action="store_true", help="Tell Traffic Manager to ignore traffic lights for hero (helps avoid stalls).")
+    pb.add_argument("--ignore-signs", action="store_true", help="Tell Traffic Manager to ignore traffic signs for hero.")
+    pb.add_argument("--wait-for-motion", action="store_true", default=WAIT_FOR_MOTION_DEFAULT, help="Delay recording until hero speed exceeds threshold.")
+    pb.add_argument("--motion-timeout", type=float, default=MOTION_TIMEOUT_S, help="Max seconds to wait for motion before starting anyway.")
     pb.add_argument("--replay-speed-factor", type=float, default=1.0, help="Time factor for replay of the freshly recorded run (<1 slows). 1.0 matches recorded timing.")
     pb.add_argument("--no-camera", action="store_true", help="Skip camera spawn/write on replay/export")
     pb.add_argument("--no-lidar", action="store_true", help="Skip lidar spawn/write on replay/export")

@@ -181,42 +181,43 @@ function renderNode(obj, pathArr = []) {
     obj.forEach((item, idx) => {
       const itemPath = [...pathArr, idx];
       const pathStr = pathToString(itemPath);
-      const container = document.createElement("div");
-      container.className = "tree-node";
-      const header = document.createElement("div");
-      header.className = "tree-row";
-      const label = document.createElement("div");
-      label.className = "tree-label";
-      label.innerHTML = `<span class="caret ${cfgState.folded.has(pathStr) ? "" : "open"}"></span> [${idx}]`;
-      label.onclick = (e) => {
-        e.stopPropagation();
-        toggleFold(pathStr);
-      };
-      header.appendChild(label);
-      const controls = document.createElement("div");
-      controls.className = "tree-controls";
-      const badge = document.createElement("span");
-      badge.className = "pill micro";
-      badge.textContent = typeOf(item);
-      controls.appendChild(badge);
-      const pick = document.createElement("button");
-      pick.className = "secondary tiny";
-      pick.textContent = "Select";
-      pick.onclick = (e) => {
-        e.stopPropagation();
-        selectPath(itemPath, item);
-      };
-      controls.appendChild(pick);
-      header.appendChild(controls);
-      container.appendChild(header);
-      if (!cfgState.folded.has(pathStr)) {
-        if (typeOf(item) === "object" || typeOf(item) === "array") {
+      const itemType = typeOf(item);
+      if (itemType === "object" || itemType === "array") {
+        const container = document.createElement("div");
+        container.className = "tree-node";
+        const header = document.createElement("div");
+        header.className = "tree-row";
+        const label = document.createElement("div");
+        label.className = "tree-label";
+        label.innerHTML = `<span class="caret ${cfgState.folded.has(pathStr) ? "" : "open"}"></span> [${idx}]`;
+        label.onclick = (e) => {
+          e.stopPropagation();
+          toggleFold(pathStr);
+        };
+        header.appendChild(label);
+        const controls = document.createElement("div");
+        controls.className = "tree-controls";
+        const badge = document.createElement("span");
+        badge.className = "pill micro";
+        badge.textContent = itemType;
+        controls.appendChild(badge);
+        const pick = document.createElement("button");
+        pick.className = "secondary tiny";
+        pick.textContent = "Select";
+        pick.onclick = (e) => {
+          e.stopPropagation();
+          selectPath(itemPath, item);
+        };
+        controls.appendChild(pick);
+        header.appendChild(controls);
+        container.appendChild(header);
+        if (!cfgState.folded.has(pathStr)) {
           container.appendChild(renderNode(item, itemPath));
-        } else {
-          container.appendChild(renderLeaf(itemPath, `[${idx}]`, item));
         }
+        frag.appendChild(container);
+      } else {
+        frag.appendChild(renderLeaf(itemPath, `[${idx}]`, item));
       }
-      frag.appendChild(container);
     });
     return frag;
   }
