@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "generalml"
+version = "0.1.0"
+description = "Local ML lab: CARLA data pipeline, vision models, and tools."
+requires-python = ">=3.10,<3.11"
+dependencies = [
+  "accelerate>=0.30",
+  "beautifulsoup4>=4.12",
+  "bitsandbytes>=0.43",
+  "cython>=3.0",
+  "dds-cloudapi-sdk>=0.3.2",
+  "diffusers>=0.29",
+  "huggingface-hub>=0.24",
+  "imageio>=2.34",
+  "imageio-ffmpeg>=0.5.1",
+  "lxml>=4.9",
+  "matplotlib",
+  "numpy",
+  "opencv-python>=4.10",
+  "pillow",
+  "prefetch-generator>=1.0.3",
+  "pycocotools",
+  "pyyaml",
+  "requests>=2.32",
+  "safetensors>=0.4",
+  "scikit-learn",
+  "scipy",
+  "seaborn>=0.13",
+  "supervision>=0.22",
+  "tensorboardX>=2.6",
+  "tqdm",
+  "transformers>=4.36",
+  "ultralytics>=8.2",
+  "xformers>=0.0.27",
+  "yacs>=0.1.8",
+  "yt-dlp>=2024.8.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = []
+
+[tool.hatch.build.targets.sdist]
+include = []
