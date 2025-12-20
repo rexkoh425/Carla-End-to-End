@@ -1,4 +1,4 @@
-# WebUI (local)
+﻿# WebUI (local)
 
 A static, local-only UI for wiring model pipelines, exporting configs, and planning training runs. No backend is required; if you want tracking, point it at your own MLflow/ClearML server.
 
@@ -7,9 +7,9 @@ From repo root:
 ```bash
 python -m http.server 8000
 # (optional) in another terminal, start the backend for tracking/model discovery
-python WebUI/server.py --port 7000
+python UIUX/WebUI/server.py --port 7000
 ```
-Then open `http://localhost:8000/WebUI/index.html` (Flow Builder) or `http://localhost:8000/WebUI/training.html` (Training planner).
+Then open `http://localhost:8000/UIUX/WebUI/index.html` (Flow Builder) or `http://localhost:8000/UIUX/WebUI/training.html` (Training planner).
 The backend exposes:
 - `GET /api/models` for auto-populating config/weights paths (Flow Builder + Config Editor call this).
 - `POST /api/track` to forward events to MLflow/ClearML (Flow Builder + Training planner call this).
@@ -20,7 +20,7 @@ The backend exposes:
 - Drag nodes (Input/Model/Post) and click connectors to link them; export pipeline JSON.
 - Add Connector node to route/parse inputs to outputs visually.
 - Tracking panel lets you set a provider (MLflow/ClearML/None) plus endpoint/experiment/run. Click **Ping** to test reachability; **Save tracking** persists to localStorage.
-- “Simulate” logs the run and sends a POST to `<endpoint>/api/track` with `{provider, experiment, run, event, payload}` when tracking is enabled.
+- â€œSimulateâ€ logs the run and sends a POST to `<endpoint>/api/track` with `{provider, experiment, run, event, payload}` when tracking is enabled.
  - Validation: basic schema checks ensure required config/weight fields before simulating/exporting.
 
 ## Config Editor
@@ -29,7 +29,7 @@ The backend exposes:
  - Auto-populates config/weights from `GET /api/models` when the backend is running, with simple schema validation for required fields.
 
 ## Training planner
-- Fill model/experiment/dataset/epochs/batch/lr/device; load config via file upload or by entering a path and clicking “Load path” (shows preview).
+- Fill model/experiment/dataset/epochs/batch/lr/device; load config via file upload or by entering a path and clicking â€œLoad pathâ€ (shows preview).
 - Save multiple plans locally and reload them; export a plan to JSON.
 - Tracking panel mirrors Flow Builder and posts to `<endpoint>/api/track` on start/export/dry run.
 
@@ -42,3 +42,4 @@ The backend exposes:
 ## Notes
 - Everything is static; no credentials are stored or transmitted unless you wire a backend.
 - Styling is defined in `styles.css`; scripts in `app.js` (Flow) and `training.js` (training planner).
+
