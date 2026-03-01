@@ -1,4 +1,4 @@
-"""
+﻿"""
 Minimal local backend for the WebUI.
 
 Endpoints:
@@ -6,7 +6,7 @@ Endpoints:
 - POST /api/track   -> forwards events to MLflow or ClearML endpoints (best-effort)
 
 Run:
-    python WebUI/server.py --port 7000
+    python UIUX/WebUI/server.py --port 7000
 """
 
 from __future__ import annotations
@@ -22,7 +22,16 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+def _find_repo_root(start: Path) -> Path:
+    cur = start.resolve()
+    for candidate in [cur] + list(cur.parents):
+        if (candidate / "config.json").exists() and (candidate / "models").exists():
+            return candidate
+    return cur.parents[2]
+
+
+PROJECT_ROOT = _find_repo_root(Path(__file__).resolve().parent)
 
 MODEL_FOLDERS = {
     "mask2former": "Mask2Former",
@@ -223,3 +232,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

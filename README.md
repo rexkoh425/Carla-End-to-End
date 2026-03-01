@@ -1,33 +1,90 @@
-Project Overview
-- Robotaxi data pipeline: record, replay, and export synchronized RGB, LiDAR, GNSS, IMU from CARLA; configurable via `CarlaControl/record_robotaxi.py`.
-- Multimodal ML: partial-BEV models (camera + LiDAR + state) under `models/multimodal/partial_bev/` and camera-only baselines; training scripts live in `models/multimodal/partial_bev/`.
-- LLM tooling: TinyLlama LoRA fine-tuning for command-to-CLI mapping in `models/llm/tinyllama/`.
+# Local Model Studio
 
-Quickstart (record → replay)
-- Start CARLA server on Windows: `CarlaWin/CARLA_0.9.16/CarlaUE4.exe -quality-level=Low -carla-rpc-port=2000 -carla-streaming-port=0`
-- Record (WSL/bash):
-  `docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend micromamba run -n app python CarlaControl/record_robotaxi.py record --host host.docker.internal --port 2000 --fps 20 --range 50 --duration 60 --out-dir "C:/NUS/MachineLearning/GeneralML/recordings"`
-- Replay/export (camera+lidar):
-  `docker compose -f docker-compose.yml -f docker-compose.override.yml exec backend micromamba run -n app python CarlaControl/record_robotaxi.py replay --host host.docker.internal --port 2000 --rec-file "C:/NUS/MachineLearning/GeneralML/recordings/<STAMP>/run.rec" --out-dir "C:/NUS/MachineLearning/GeneralML/recordings"`
-- Optional flags to reduce load: `--no-camera`, `--no-lidar`, `--no-gnss`, `--no-imu`.
+The **Local Model Studio** is an integrated workspace for developing autonomous-driving intelligence from end to end. It brings together a complete robotaxi data loop, modular multimodal perception models, and a lightweight language-model pipeline for converting natural language into structured commands.  
+Its goal is to make dataset creation, experimentation, and evaluation intuitive, reproducible, and technically powerful.
 
-Paths and mounts
-- Windows recordings folder: `C:/NUS/MachineLearning/GeneralML/recordings` (mapped as `/recordings` inside backend container).
-- Datasets on D: `D:/Datasets` are mapped as `/Storage` in container.
+---
 
-Training entry points
-- Camera-only steer regression: `models/multimodal/partial_bev/train_camera_steer.py`
-  Example (WSL): `docker compose ... exec backend micromamba run -n app python models/multimodal/partial_bev/train_camera_steer.py --data-jsonl "/recordings/CameraFront_Steer.jsonl" --out-dir "/app/Output/camera_steer_model_hi" --epochs 5 --batch-size 8 --lr 1e-4 --img-height 256 --img-width 512 --num-workers 12`
-- Full multimodal (camera+LiDAR+state): `models/multimodal/partial_bev/train_full_camera_only.py` (supports freezing unused branches).
-- TinyLlama LoRA fine-tune: `models/llm/tinyllama/finetune_tinyllama.py --config models/llm/tinyllama/finetune_config.yaml`
-- Evaluate TinyLlama: `models/llm/tinyllama/eval_tinyllama.py --test-jsonl models/llm/tinyllama/splits/test.jsonl --adapter-path "/app/models/llm/tinyllama_finetuned_v3" --model-name TinyLlama/TinyLlama-1.1B-Chat-v1.0 --max-length 256 --batch-size 4`
+## What This Repository Provides
 
-Notable scripts
-- `CarlaControl/record_robotaxi.py` – record/replay/export with per-sensor toggles (`--no-camera`, `--no-lidar`, `--no-gnss`, `--no-imu`).
-- `CarlaControl/spawn_scene.py` and `CarlaControl/spawn_traffic.py` – spawn vehicles/walkers with TM sync.
-- `models/llm/tinyllama/split_dataset.py` – split JSONL datasets.
-- `utils/prepare_recordings_camera_only.py` – convert camera+steer recordings to JSONL for training.
+### Robotaxi Data Loop  
+A synchronized capture-and-replay engine that records RGB cameras, LiDAR sweeps, GNSS positions, and IMU signals with deterministic timing.  
+This enables precise reconstruction of driving scenes for training and evaluation.
 
-Tips for smoother replay
-- Use `--no-lidar` or `--no-camera` to debug performance; reduce `--fps` (e.g., 15–20) and/or camera resolution if needed.
-- Keep CARLA server on Low quality/offscreen and ensure mounts point to local SSD (e.g., `/recordings`).
+- High-fidelity alignment of all sensor modalities  
+- Deterministic playback for reproducible experiments  
+- Partial-modal configurations for isolating sensors or debugging  
+- Designed to support both large-scale datasets and targeted scenario captures  
+
+<p align="center">
+  <img src="docs/images/FlowBuilder.png" width="600">
+</p>
+
+---
+
+### Vision & BEV Models  
+A modular perception stack providing both **partial-BEV fusion** and **camera-only** baselines.
+
+#### Partial-BEV Models  
+Models that fuse:  
+- camera features  
+- LiDAR projections  
+- vehicle state  
+
+into a clean top-down bird’s-eye-view representation, ideal for steering and path prediction.
+
+#### Camera-Only Models  
+Lightweight models optimized for limited VRAM while maintaining real-time inference characteristics.
+
+Key characteristics:  
+- Easily swappable backbones  
+- Extensible fusion blocks  
+- Suitable for rapid experimentation and research workflows  
+
+<p align="center">
+  <img src="docs/images/ConfigEditor.png" width="600">
+</p>
+
+---
+
+### Command-to-CLI LLMs  
+A compact language-to-action pipeline powered by **TinyLlama LoRA**, enabling natural language to drive simulation and tooling.
+
+This component provides:  
+- domain-specific dataset generation utilities  
+- fine-tuning workflows  
+- evaluation metrics for both exact-match and semantic accuracy  
+
+It bridges human intent and executable commands, enabling automated CARLA scenario generation and structured tool orchestration.
+
+---
+
+## UI at a Glance
+
+### Flow Builder  
+A visual node-based interface for assembling perception pipelines, linking models, and previewing outputs in real time.
+
+![Flow Builder](docs/images/FlowBuilder.png)
+
+### Config Editor  
+A YAML tree viewer and editor that exposes the configuration of every model, dataset, or processing step inside the repo.
+
+![Config Editor](docs/images/ConfigEditor.png)
+
+Users can explore, refine, and export configurations cleanly, ensuring experiment repeatability.
+
+---
+
+## How the Studio Fits Together  
+The ecosystem is designed so each component reinforces the others:
+
+- **Record synchronized data**  
+- **Replay with perfect determinism**  
+- **Train BEV or camera-only models**  
+- **Evaluate through consistent pipelines**  
+- **Prototype visually using the Flow Builder**  
+- **Control the system using TinyLlama-generated CLI commands**
+
+The Local Model Studio is compact yet powerful — a foundation for research, prototyping, and production-ready autonomous-driving workflows.
+
+---
